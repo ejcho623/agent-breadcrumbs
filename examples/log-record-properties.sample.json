@@ -1,0 +1,5 @@
+{
+  "task_id": { "type": "string" },
+  "summary": { "type": "string" },
+  "hours_spent": { "type": "number" }
+}

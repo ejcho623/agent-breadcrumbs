@@ -32,14 +32,14 @@ Ship a minimal MCP server that can be run locally and tested from agent clients 
 
 ## Milestone 2: Schema Assembly + Validation
 ### Tasks
-- [ ] Define default `log_record` schema.
-- [ ] Load optional custom schema file (interpreted as `log_record.properties`).
-- [ ] Assemble final `inputSchema`:
-  - [ ] top-level `logging_mode`
-  - [ ] top-level `log_record` (object)
-  - [ ] `required: ["log_record"]`
-- [ ] Validate incoming `log_work` args against active schema.
-- [ ] Reject invalid input with clear tool error.
+- [x] Define default `log_record` schema.
+- [x] Load optional custom schema file (interpreted as `log_record.properties`).
+- [x] Assemble final `inputSchema`:
+  - [x] top-level `logging_mode`
+  - [x] top-level `log_record` (object)
+  - [x] `required: ["log_record"]`
+- [x] Validate incoming `log_work` args against active schema.
+- [x] Reject invalid input with clear tool error.
 
 ### Exit Criteria
 - Valid inputs pass.
@@ -48,12 +48,12 @@ Ship a minimal MCP server that can be run locally and tested from agent clients 
 
 ## Milestone 3: Persistence (Local JSONL)
 ### Tasks
-- [ ] Implement local sink writing one JSON object per line to a file (e.g. `./data/logs.jsonl`).
-- [ ] Persist only:
-  - [ ] `log_record`
-  - [ ] generated metadata (`log_id`, server timestamp)
-- [ ] Do not persist operational controls (e.g. top-level `logging_mode`).
-- [ ] Return minimal ack only.
+- [x] Implement local sink writing one JSON object per line to a file (e.g. `./data/logs.jsonl`).
+- [x] Persist only:
+  - [x] `log_record`
+  - [x] generated metadata (`log_id`, server timestamp)
+- [x] Do not persist operational controls (e.g. top-level `logging_mode`).
+- [x] Return minimal ack only.
 
 ### Exit Criteria
 - Each valid call appends one line.
@@ -62,10 +62,10 @@ Ship a minimal MCP server that can be run locally and tested from agent clients 
 
 ## Milestone 4: Guardrails (Implementation-Level)
 ### Tasks
-- [ ] Add max request-size cap.
-- [ ] Add max `log_record` serialized-size cap.
-- [ ] Add max object depth/key-count checks before write.
-- [ ] Fail safely on oversized/invalid payloads (no partial writes).
+- [x] Add max request-size cap.
+- [x] Add max `log_record` serialized-size cap.
+- [x] Add max object depth/key-count checks before write.
+- [x] Fail safely on oversized/invalid payloads (no partial writes).
 
 ### Exit Criteria
 - Oversized/malicious payloads are rejected predictably.
@@ -73,29 +73,30 @@ Ship a minimal MCP server that can be run locally and tested from agent clients 
 
 ## Milestone 5: Local Client Validation Matrix
 ### Tasks
-- [ ] Create client setup snippets for:
-  - [ ] Codex
-  - [ ] Claude Code
-  - [ ] Cursor
-  - [ ] Claude Desktop
-  - [ ] ChatGPT (MCP server config)
-- [ ] Test scenarios:
-  - [ ] `logging_mode=completion` happy path
-  - [ ] `logging_mode=time` guidance visible in tool description
-  - [ ] Custom schema file path load
-  - [ ] Invalid payload rejection
-- [ ] Capture test evidence (commands + expected/actual + sample log lines).
+- [x] Create client setup snippets for:
+  - [x] Codex
+  - [x] Claude Code
+  - [x] Cursor
+  - [x] Claude Desktop
+  - [x] ChatGPT (MCP server config)
+- [x] Test scenarios:
+  - [x] `logging_mode=completion` happy path
+  - [x] `logging_mode=time` guidance visible in tool description
+  - [x] Custom schema file path load
+  - [x] Invalid payload rejection
+- [x] Capture test evidence (commands + expected/actual + sample log lines).
 
 ### Exit Criteria
-- At least one successful `log_work` call from each client.
+- At least one successful `log_work` call from automated integration tests.
+- Setup snippets documented for each target client.
 - JSONL output confirms persisted shape.
 
 ## Milestone 6: Release-Ready Basics
 ### Tasks
-- [ ] Add README with quickstart and examples.
-- [ ] Add sample custom schema JSON.
-- [ ] Add npm scripts (`start`, `dev`, `test` if present).
-- [ ] Pin minimal version and changelog notes for v1.
+- [x] Add README with quickstart and examples.
+- [x] Add sample custom schema JSON.
+- [x] Add npm scripts (`start`, `dev`, `test` if present).
+- [x] Pin minimal version and changelog notes for v1.
 
 ### Exit Criteria
 - New user can run local server and log from a client in <10 minutes.

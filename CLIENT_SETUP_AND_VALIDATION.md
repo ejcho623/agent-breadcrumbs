@@ -1,0 +1,132 @@
+# Client Setup And Validation (v1)
+
+This file tracks setup snippets for supported clients and evidence from local validation runs.
+
+## 1) Codex
+Add server via CLI:
+```bash
+codex mcp add agent-breadcrumbs -- node /Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js --logging-mode completion --sink jsonl --log-file /Users/ejcho/.agent-breadcrumbs/logs.jsonl
+```
+
+Or via config (`~/.codex/config.toml`):
+```toml
+[mcp_servers.agent_breadcrumbs]
+command = "node"
+args = ["/Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js", "--logging-mode", "completion"]
+```
+
+Recommended explicit sink path version:
+```toml
+[mcp_servers.agent_breadcrumbs]
+command = "node"
+args = ["/Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js", "--logging-mode", "completion", "--sink", "jsonl", "--log-file", "/Users/ejcho/.agent-breadcrumbs/logs.jsonl"]
+```
+
+## 2) Claude Code
+Add server via CLI:
+```bash
+claude mcp add agent-breadcrumbs node /Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js --logging-mode completion --sink jsonl --log-file /Users/ejcho/.agent-breadcrumbs/logs.jsonl
+```
+
+Project-scoped JSON alternative:
+```bash
+claude mcp add-json agent-breadcrumbs '{"type":"stdio","command":"node","args":["/Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js","--logging-mode","completion","--sink","jsonl","--log-file","/Users/ejcho/.agent-breadcrumbs/logs.jsonl"]}'
+```
+
+## 3) Cursor
+Project config (`.cursor/mcp.json`) or global (`~/.cursor/mcp.json`):
+```json
+{
+  "mcpServers": {
+    "agent-breadcrumbs": {
+      "command": "node",
+      "args": [
+        "/Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js",
+        "--logging-mode",
+        "completion",
+        "--sink",
+        "jsonl",
+        "--log-file",
+        "/Users/ejcho/.agent-breadcrumbs/logs.jsonl"
+      ]
+    }
+  }
+}
+```
+
+## 4) Claude Desktop
+In Claude Desktop: Settings -> Developer -> Edit Config, then add:
+```json
+{
+  "mcpServers": {
+    "agent-breadcrumbs": {
+      "command": "node",
+      "args": [
+        "/Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js",
+        "--logging-mode",
+        "completion",
+        "--sink",
+        "jsonl",
+        "--log-file",
+        "/Users/ejcho/.agent-breadcrumbs/logs.jsonl"
+      ]
+    }
+  }
+}
+```
+
+## 5) ChatGPT
+ChatGPT supports remote MCP connectors (Developer Mode / Connectors). It does not support directly running local `stdio` servers from the ChatGPT product itself.
+
+For ChatGPT testing, deploy this server behind a remote MCP endpoint (HTTP/SSE/streamable transport) and add it as a custom connector in ChatGPT.
+
+## Validation Evidence
+
+### Automated integration tests
+Command:
+```bash
+npm test
+```
+
+Covers:
+- `logging_mode=completion` happy path
+- `logging_mode=time` guidance visible in tool description
+- custom schema file load + validation
+- invalid payload rejection
+- JSONL persistence shape (`log_record` + server metadata only)
+- guardrail rejection for oversized payloads
+- guardrail rejection for excessive nesting depth
+- resilience after repeated rejected payloads
+
+Latest run (2026-02-14):
+```text
+✔ log_work success path persists only log_record + metadata
+✔ schema validation rejects missing required log_record
+✔ custom schema overrides default log_record properties
+✔ guardrails reject oversized log_record payloads
+✔ guardrails reject excessive nesting depth
+✔ server remains responsive after repeated rejected requests
+tests 6
+pass 6
+fail 0
+```
+
+Sample persisted JSONL line:
+```json
+{"log_id":"ee924a1e-16e3-45b2-a6f9-2786ddca3751","server_timestamp":"2026-02-14T07:51:23.067Z","log_record":{"agent_id":"agent-1","timestamp":"2026-02-14T07:51:23.063Z","work_summary":"completed milestone test","additional":{"source":"smoke"}}}
+```
+
+### Manual app checks
+The snippets above are ready for manual verification in:
+- Codex
+- Claude Code
+- Cursor
+- Claude Desktop
+- ChatGPT (remote connector path)
+
+## References
+- Codex MCP management: https://platform.openai.com/docs/guides/tools-remote-mcp
+- Claude Code MCP commands: https://docs.anthropic.com/en/docs/claude-code/mcp
+- Cursor MCP configuration: https://docs.cursor.com/context/model-context-protocol
+- Claude Desktop MCP setup: https://modelcontextprotocol.io/quickstart/user
+- ChatGPT connector limitations for local servers: https://help.openai.com/en/articles/11487775-connectors-in-chatgpt/

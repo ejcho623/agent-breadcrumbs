@@ -102,11 +102,18 @@ Schema-profile config examples:
 - `/Users/ejcho/Documents/projects/agent-breadcrumbs/examples/server-config.audit-trail.sample.json`
 - `/Users/ejcho/Documents/projects/agent-breadcrumbs/examples/server-config.knowledge-capture.sample.json`
 
-Built-in schema profiles:
-- `agent_insights_v1`
-- `delivery_tracking_v1`
-- `audit_trail_v1`
-- `knowledge_capture_v1`
+Schema profiles are loaded from JSON files in:
+- `/Users/ejcho/Documents/projects/agent-breadcrumbs/examples/schema_profiles`
+
+Current profile files include:
+- `agent_insights_v1.json`
+- `delivery_tracking_v1.json`
+- `audit_trail_v1.json`
+- `knowledge_capture_v1.json`
+- `default_v1.json`
+
+Default schema reference (used when neither `schema` nor `schema_profile` is set):
+- `/Users/ejcho/Documents/projects/agent-breadcrumbs/examples/schema_profiles/default_v1.json`
 
 Use a profile via config:
 ```json

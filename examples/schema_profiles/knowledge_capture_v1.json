@@ -1,0 +1,38 @@
+{
+  "title": {
+    "type": "string",
+    "description": "Title of the captured knowledge item."
+  },
+  "summary": {
+    "type": "string",
+    "description": "What should be remembered/reused."
+  },
+  "knowledge_type": {
+    "type": "string",
+    "description": "Category such as fix, pattern, decision, runbook."
+  },
+  "source_ref": {
+    "type": "string",
+    "description": "Optional source pointer (URL, commit, file, ticket)."
+  },
+  "captured_at": {
+    "type": "string",
+    "format": "date-time",
+    "description": "Capture timestamp (ISO 8601)."
+  },
+  "tags": {
+    "type": "array",
+    "items": {
+      "type": "string"
+    },
+    "description": "Optional list of tags for search/grouping."
+  },
+  "confidence": {
+    "type": "number",
+    "description": "Optional confidence score, e.g. 0-1."
+  },
+  "additional": {
+    "type": "object",
+    "description": "Optional extra structured context."
+  }
+}

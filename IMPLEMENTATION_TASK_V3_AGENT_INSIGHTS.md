@@ -29,7 +29,7 @@ Extend Agent Breadcrumbs from a sink-focused logger into a multi-use-case platfo
   - [x] `delivery_tracking_v1`
   - [x] `audit_trail_v1`
   - [x] `knowledge_capture_v1`
-- [x] Create example schema files per profile under `examples/schemas/`.
+- [x] Create example schema files per profile under `examples/schema_profiles/`.
 - [x] Create full example server configs per profile under `examples/`.
 - [x] Keep profile fields flexible; no hard required global field set.
 
@@ -42,14 +42,14 @@ Extend Agent Breadcrumbs from a sink-focused logger into a multi-use-case platfo
 ## Milestone 2: Config UX + Validation for Profile Selection
 ### Tasks
 - [x] Extend config model to support `schema_profile` selection.
-- [x] Keep backward compatibility for custom inline `schema`.
+- [x] Keep support for custom inline `schema` alongside profiles.
 - [x] Resolve selected profile schema at startup (same behavior as inline schema resolution).
 - [x] Validate profile-related fields only if they are present in the selected profile.
 - [x] Add migration guidance from arbitrary custom schema to profile-based schemas.
 
 ### Exit Criteria
 - Users can choose a profile via config without writing full schema JSON manually.
-- Existing users with custom schemas are not broken.
+- Inline custom schemas and profile schemas are both supported.
 
 ## Suggested Build Order
 1. Milestone 1

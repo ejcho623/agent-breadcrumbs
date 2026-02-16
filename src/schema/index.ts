@@ -1,7 +1,7 @@
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 
 import type { LogRecordProperties, PropertySchema, SchemaProfileName, SchemaSource } from "../types.js";
-import { SCHEMA_PROFILES, isSchemaProfileName, listSchemaProfiles } from "./profiles.js";
+import { hasSchemaProfile, listSchemaProfiles, resolveSchemaProfile } from "./profiles.js";
 
 export const DEFAULT_LOG_RECORD_PROPERTIES: LogRecordProperties = {
   agent_id: { type: "string" },
@@ -45,7 +45,7 @@ export function resolveLogRecordPropertiesFromProfile(rawSchemaProfile: unknown)
     throw new Error("config.schema_profile must be a non-empty string");
   }
 
-  if (!isSchemaProfileName(rawSchemaProfile)) {
+  if (!hasSchemaProfile(rawSchemaProfile)) {
     const supported = listSchemaProfiles().join(", ");
     throw new Error(
       `Unknown config.schema_profile: ${rawSchemaProfile}. Supported profiles: ${supported}. ` +
@@ -56,7 +56,7 @@ export function resolveLogRecordPropertiesFromProfile(rawSchemaProfile: unknown)
   return {
     schemaSource: "profile",
     schemaProfileName: rawSchemaProfile,
-    properties: SCHEMA_PROFILES[rawSchemaProfile],
+    properties: resolveSchemaProfile(rawSchemaProfile),
   };
 }
 

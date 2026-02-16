@@ -1,0 +1,35 @@
+{
+  "project_id": {
+    "type": "string",
+    "description": "Project identifier (optional but recommended)."
+  },
+  "task_id": {
+    "type": "string",
+    "description": "Task/work-item identifier (optional)."
+  },
+  "delivery_id": {
+    "type": "string",
+    "description": "Delivery/release identifier (optional)."
+  },
+  "artifact_ref": {
+    "type": "string",
+    "description": "Reference to delivered artifact (PR URL, commit, release tag, file)."
+  },
+  "delivered_at": {
+    "type": "string",
+    "format": "date-time",
+    "description": "When the delivery happened (ISO 8601)."
+  },
+  "status": {
+    "type": "string",
+    "description": "Delivery outcome such as success, failed, partial."
+  },
+  "work_summary": {
+    "type": "string",
+    "description": "What was delivered."
+  },
+  "additional": {
+    "type": "object",
+    "description": "Optional extra structured context."
+  }
+}

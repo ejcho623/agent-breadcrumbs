@@ -1,0 +1,43 @@
+{
+  "actor_id": {
+    "type": "string",
+    "description": "Actor identifier (agent or human)."
+  },
+  "actor_type": {
+    "type": "string",
+    "description": "Actor type such as agent, human, service."
+  },
+  "action": {
+    "type": "string",
+    "description": "Action performed, for example claim_task, merge_pr, deploy."
+  },
+  "target_type": {
+    "type": "string",
+    "description": "Entity type that action was applied to, such as task, pr, environment."
+  },
+  "target_id": {
+    "type": "string",
+    "description": "Identifier for the target entity."
+  },
+  "reason": {
+    "type": "string",
+    "description": "Optional reason or justification for the action."
+  },
+  "timestamp": {
+    "type": "string",
+    "format": "date-time",
+    "description": "When the action happened (ISO 8601)."
+  },
+  "status": {
+    "type": "string",
+    "description": "Outcome label such as success, failed, blocked."
+  },
+  "work_summary": {
+    "type": "string",
+    "description": "Short natural-language audit summary."
+  },
+  "additional": {
+    "type": "object",
+    "description": "Optional extra structured context."
+  }
+}

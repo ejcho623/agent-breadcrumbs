@@ -1,0 +1,35 @@
+{
+  "agent_id": {
+    "type": "string",
+    "description": "Agent identifier (for example: codex-gpt5)."
+  },
+  "timestamp": {
+    "type": "string",
+    "format": "date-time",
+    "description": "When the logged work happened (ISO 8601)."
+  },
+  "event_type": {
+    "type": "string",
+    "description": "Short event label such as progress_update, milestone_complete, or run_complete."
+  },
+  "status": {
+    "type": "string",
+    "description": "State label such as success, failed, blocked, or info."
+  },
+  "work_summary": {
+    "type": "string",
+    "description": "Human-readable summary of what was done."
+  },
+  "duration_ms": {
+    "type": "number",
+    "description": "Optional elapsed time for this unit of work."
+  },
+  "run_id": {
+    "type": "string",
+    "description": "Optional run/session identifier."
+  },
+  "additional": {
+    "type": "object",
+    "description": "Optional extra structured context."
+  }
+}

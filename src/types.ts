@@ -1,5 +1,5 @@
 export type SchemaSource = "default" | "custom" | "profile";
-export type SchemaProfileName = "agent_insights_v1" | "delivery_tracking_v1" | "audit_trail_v1" | "knowledge_capture_v1";
+export type SchemaProfileName = string;
 export type SinkName = "jsonl" | "webhook" | "postgres";
 
 export interface JsonlSinkConfig {

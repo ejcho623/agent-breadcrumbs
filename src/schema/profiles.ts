@@ -1,85 +1,91 @@
-import type { LogRecordProperties, SchemaProfileName } from "../types.js";
+import { readFileSync, readdirSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-const AGENT_INSIGHTS_V1: LogRecordProperties = {
-  schema_profile: { type: "string" },
-  schema_version: { type: "string" },
-  team_id: { type: "string" },
-  project_id: { type: "string" },
-  human_actor_id: { type: "string" },
-  agent_id: { type: "string" },
-  run_id: { type: "string" },
-  event_type: { type: "string" },
-  status: { type: "string" },
-  duration_ms: { type: "number" },
-  output_count: { type: "number" },
-  cost_usd: { type: "number" },
-  work_summary: { type: "string" },
-  additional: { type: "object" },
-};
+import type { LogRecordProperties, PropertySchema, SchemaProfileName } from "../types.js";
 
-const DELIVERY_TRACKING_V1: LogRecordProperties = {
-  schema_profile: { type: "string" },
-  schema_version: { type: "string" },
-  team_id: { type: "string" },
-  project_id: { type: "string" },
-  initiative_id: { type: "string" },
-  milestone_id: { type: "string" },
-  task_id: { type: "string" },
-  delivery_id: { type: "string" },
-  artifact_ref: { type: "string" },
-  event_type: { type: "string" },
-  status: { type: "string" },
-  delivered_at: { type: "string", format: "date-time" },
-  effort_hours: { type: "number" },
-  work_summary: { type: "string" },
-  additional: { type: "object" },
-};
+const moduleDir = path.dirname(fileURLToPath(import.meta.url));
+const schemaDirectory = path.resolve(moduleDir, "../../examples/schema_profiles");
 
-const AUDIT_TRAIL_V1: LogRecordProperties = {
-  schema_profile: { type: "string" },
-  schema_version: { type: "string" },
-  team_id: { type: "string" },
-  project_id: { type: "string" },
-  actor_type: { type: "string" },
-  actor_id: { type: "string" },
-  action: { type: "string" },
-  target_type: { type: "string" },
-  target_id: { type: "string" },
-  reason: { type: "string" },
-  status: { type: "string" },
-  timestamp: { type: "string", format: "date-time" },
-  work_summary: { type: "string" },
-  additional: { type: "object" },
-};
-
-const KNOWLEDGE_CAPTURE_V1: LogRecordProperties = {
-  schema_profile: { type: "string" },
-  schema_version: { type: "string" },
-  team_id: { type: "string" },
-  project_id: { type: "string" },
-  knowledge_type: { type: "string" },
-  title: { type: "string" },
-  summary: { type: "string" },
-  source_ref: { type: "string" },
-  tags: { type: "array", items: { type: "string" } },
-  confidence: { type: "number" },
-  event_type: { type: "string" },
-  status: { type: "string" },
-  captured_at: { type: "string", format: "date-time" },
-  additional: { type: "object" },
-};
-
-export const SCHEMA_PROFILES: Record<SchemaProfileName, LogRecordProperties> = {
-  agent_insights_v1: AGENT_INSIGHTS_V1,
-  delivery_tracking_v1: DELIVERY_TRACKING_V1,
-  audit_trail_v1: AUDIT_TRAIL_V1,
-  knowledge_capture_v1: KNOWLEDGE_CAPTURE_V1,
-};
+let profileCache: Record<string, LogRecordProperties> | null = null;
 
 export function listSchemaProfiles(): SchemaProfileName[] {
-  return Object.keys(SCHEMA_PROFILES) as SchemaProfileName[];
+  return Object.keys(loadProfiles()).sort();
 }
 
-export function isSchemaProfileName(value: string): value is SchemaProfileName {
-  return value in SCHEMA_PROFILES;
+export function hasSchemaProfile(profileName: string): boolean {
+  return profileName in loadProfiles();
+}
+
+export function resolveSchemaProfile(profileName: SchemaProfileName): LogRecordProperties {
+  const profiles = loadProfiles();
+  const profile = profiles[profileName];
+  if (!profile) {
+    throw new Error(`Unknown schema profile: ${profileName}`);
+  }
+  return profile;
+}
+
+function loadProfiles(): Record<string, LogRecordProperties> {
+  if (profileCache) {
+    return profileCache;
+  }
+
+  let files: string[];
+  try {
+    files = readdirSync(schemaDirectory);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to read schema profiles directory at ${schemaDirectory}: ${message}`);
+  }
+
+  const profiles: Record<string, LogRecordProperties> = {};
+
+  for (const file of files) {
+    if (!file.endsWith(".json")) {
+      continue;
+    }
+
+    const profileName = file.slice(0, -".json".length);
+    const filePath = path.join(schemaDirectory, file);
+
+    let rawText: string;
+    try {
+      rawText = readFileSync(filePath, "utf8");
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to read schema profile file ${filePath}: ${message}`);
+    }
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(rawText);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Invalid JSON in schema profile file ${filePath}: ${message}`);
+    }
+
+    profiles[profileName] = normalizeLogRecordProperties(parsed, `schema profile ${profileName}`);
+  }
+
+  profileCache = profiles;
+  return profileCache;
+}
+
+function normalizeLogRecordProperties(rawSchema: unknown, context: string): LogRecordProperties {
+  if (!rawSchema || Array.isArray(rawSchema) || typeof rawSchema !== "object") {
+    throw new Error(`${context} must be a JSON object`);
+  }
+
+  const candidate = rawSchema as Record<string, unknown>;
+  const normalized: LogRecordProperties = {};
+
+  for (const [key, value] of Object.entries(candidate)) {
+    if (!value || Array.isArray(value) || typeof value !== "object") {
+      throw new Error(`${context}.${key} must be a JSON object`);
+    }
+    normalized[key] = value as PropertySchema;
+  }
+
+  return normalized;
 }

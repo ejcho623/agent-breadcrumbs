@@ -1,0 +1,19 @@
+{
+  "agent_id": {
+    "type": "string",
+    "description": "Agent identifier (for example: codex-gpt5)."
+  },
+  "timestamp": {
+    "type": "string",
+    "format": "date-time",
+    "description": "When the logged work happened (ISO 8601)."
+  },
+  "work_summary": {
+    "type": "string",
+    "description": "Human-readable summary of what was done."
+  },
+  "additional": {
+    "type": "object",
+    "description": "Optional extra structured context."
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "sink": {
+    "name": "postgres",
+    "config": {
+      "connection_string": "postgres://user:password@localhost:5432/agent_breadcrumbs",
+      "table": "public.agent_logs",
+      "timeout_ms": 5000,
+      "retry": {
+        "max_attempts": 1,
+        "backoff_ms": 250
+      }
+    }
+  }
+}

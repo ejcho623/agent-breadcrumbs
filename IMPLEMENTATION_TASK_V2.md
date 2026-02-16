@@ -70,16 +70,16 @@ Extend the server with first-class `webhook` and `postgres` sinks while keeping 
 
 ## Milestone 4: Postgres Sink
 ### Tasks
-- [ ] Implement Postgres sink with connection string + target table config.
-- [ ] Create insert path for envelope + `log_record` JSON.
-- [ ] Add basic schema bootstrap doc (recommended table DDL).
-- [ ] Add connection/retry timeout guardrails.
-- [ ] Add fast Postgres tests (`npm test`) for config validation and deterministic error mapping (no real DB).
-- [ ] Add Postgres integration tests (`npm run test:integration`) with ephemeral Postgres:
-  - [ ] create test table
-  - [ ] assert one-row insert per successful `log_work`
-  - [ ] verify stored envelope + payload structure
-  - [ ] validate expected failure paths (bad credentials/unreachable DB/timeout)
+- [x] Implement Postgres sink with connection string + target table config.
+- [x] Create insert path for envelope + `log_record` JSON.
+- [x] Add basic schema bootstrap doc (recommended table DDL).
+- [x] Add connection/retry timeout guardrails.
+- [x] Add fast Postgres tests (`npm test`) for config validation and deterministic error mapping (no real DB).
+- [x] Add Postgres integration tests (`npm run test:integration`) with ephemeral Postgres:
+  - [x] create test table
+  - [x] assert one-row insert per successful `log_work`
+  - [x] verify stored envelope + payload structure
+  - [x] validate expected failure paths (bad credentials/unreachable DB/timeout)
 
 ### Exit Criteria
 - Valid calls insert one row per event.
@@ -88,12 +88,12 @@ Extend the server with first-class `webhook` and `postgres` sinks while keeping 
 
 ## Milestone 5: Validation + Docs
 ### Tasks
-- [ ] Update README with v2 config examples:
-  - [ ] single `jsonl`
-  - [ ] single `webhook`
-  - [ ] single `postgres`
-- [ ] Update client setup docs to prefer `--config`.
-- [ ] Add `npm run test:integration` command and document local prerequisites.
+- [x] Update README with v2 config examples:
+  - [x] single `jsonl`
+  - [x] single `webhook`
+  - [x] single `postgres`
+- [x] Update client setup docs to prefer `--config`.
+- [x] Add `npm run test:integration` command and document local prerequisites.
 
 ### Exit Criteria
 - `npm test` and `npm run test:integration` are both documented and runnable.

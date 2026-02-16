@@ -11,8 +11,7 @@ Minimal MCP server for logging agent work with low response overhead.
 - Minimal success ack: `{ "ok": true, "log_id": "..." }`
 
 Current sink status:
-- Implemented: `jsonl`, `webhook`
-- Config parsed but not implemented yet: `postgres`
+- Implemented: `jsonl`, `webhook`, `postgres`
 
 ## Requirements
 - Node.js 18+
@@ -74,6 +73,33 @@ Webhook config sample:
 }
 ```
 
+Postgres config sample:
+```json
+{
+  "sink": {
+    "name": "postgres",
+    "config": {
+      "connection_string": "postgres://user:password@localhost:5432/agent_breadcrumbs",
+      "table": "public.agent_logs",
+      "timeout_ms": 5000,
+      "retry": {
+        "max_attempts": 1,
+        "backoff_ms": 250
+      }
+    }
+  }
+}
+```
+
+Postgres table bootstrap (recommended):
+```sql
+CREATE TABLE public.agent_logs (
+  log_id TEXT PRIMARY KEY,
+  server_timestamp TIMESTAMPTZ NOT NULL,
+  log_record JSONB NOT NULL
+);
+```
+
 ## Tool shape
 `log_work` input schema is built as:
 - top-level `log_record` (persisted fields)
@@ -118,6 +144,10 @@ Over-limit payloads are rejected before write.
 npm test
 npm run test:integration
 ```
+
+`npm run test:integration` notes:
+- Postgres success + timeout integration cases run only when `POSTGRES_TEST_URL` is set.
+- The unreachable-Postgres case runs without `POSTGRES_TEST_URL`.
 
 ## Client setup and validation matrix
 See `/Users/ejcho/Documents/projects/agent-breadcrumbs/CLIENT_SETUP_AND_VALIDATION.md`.

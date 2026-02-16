@@ -470,8 +470,8 @@ test('webhook sink returns deterministic non-2xx error and does not retry 4xx', 
   }
 });
 
-test('server startup accepts postgres sink config but reports not implemented', async () => {
-  const cwd = await mkdtemp(path.join(os.tmpdir(), 'ab-postgres-not-impl-'));
+test('server startup rejects invalid postgres table identifier', async () => {
+  const cwd = await mkdtemp(path.join(os.tmpdir(), 'ab-postgres-invalid-table-'));
   const configPath = path.join(cwd, 'server-config.json');
   try {
     await writeFile(
@@ -481,7 +481,7 @@ test('server startup accepts postgres sink config but reports not implemented', 
           name: 'postgres',
           config: {
             connection_string: 'postgres://localhost:5432/db',
-            table: 'agent_logs',
+            table: 'public.agent_logs;drop_table',
           },
         },
       }),
@@ -493,8 +493,49 @@ test('server startup accepts postgres sink config but reports not implemented', 
       args: ['--config', configPath],
     });
 
-    assert.match(stderr, /postgres/i);
-    assert.match(stderr, /not implemented yet/i);
+    assert.match(stderr, /config\.sink\.config\.table/i);
+    assert.match(stderr, /valid table identifier/i);
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
+test('postgres sink returns deterministic transport error when database is unreachable', async () => {
+  const cwd = await mkdtemp(path.join(os.tmpdir(), 'ab-postgres-unreachable-'));
+  const configPath = path.join(cwd, 'server-config.json');
+  try {
+    await writeFile(
+      configPath,
+      JSON.stringify({
+        sink: {
+          name: 'postgres',
+          config: {
+            connection_string: 'postgres://127.0.0.1:1/missing',
+            table: 'agent_logs',
+            timeout_ms: 100,
+            retry: {
+              max_attempts: 0,
+              backoff_ms: 1,
+            },
+          },
+        },
+      }),
+      'utf8',
+    );
+
+    await withClient({ cwd, configPath }, async (client) => {
+      const result = await client.callTool({
+        name: 'log_work',
+        arguments: {
+          log_record: {
+            work_summary: 'expect transport failure',
+          },
+        },
+      });
+
+      assert.equal(result.isError, true);
+      assert.match(result.content?.[0]?.text ?? '', /postgres transport error|postgres timeout/i);
+    });
   } finally {
     await rm(cwd, { recursive: true, force: true });
   }

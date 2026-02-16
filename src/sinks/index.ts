@@ -3,12 +3,15 @@ import path from "node:path";
 
 import type { SinkConfig } from "../types.js";
 import { createJsonlSink } from "./jsonl.js";
+import { createPostgresSink } from "./postgres.js";
 import { createWebhookSink } from "./webhook.js";
 
 const DEFAULT_WEBHOOK_TIMEOUT_MS = 3000;
 const DEFAULT_WEBHOOK_RETRY_MAX_ATTEMPTS = 0;
 const DEFAULT_WEBHOOK_RETRY_BACKOFF_MS = 250;
 const DEFAULT_POSTGRES_TIMEOUT_MS = 5000;
+const DEFAULT_POSTGRES_RETRY_MAX_ATTEMPTS = 0;
+const DEFAULT_POSTGRES_RETRY_BACKOFF_MS = 250;
 
 export interface PersistedRecord {
   log_id: string;
@@ -91,11 +94,25 @@ export function resolveSinkConfig(rawSink: unknown, baseDir: string, defaultLogF
   if (name === "postgres") {
     const configObject = requireObject(rawConfig, "config.sink.config");
     const connectionString = requireString(configObject.connection_string, "config.sink.config.connection_string");
-    const table = requireString(configObject.table, "config.sink.config.table");
+    const table = requireTableName(configObject.table, "config.sink.config.table");
     const timeoutMs = resolvePositiveInteger(
       configObject.timeout_ms,
       "config.sink.config.timeout_ms",
       DEFAULT_POSTGRES_TIMEOUT_MS,
+    );
+    const retryObject =
+      configObject.retry === undefined ? {} : requireObject(configObject.retry, "config.sink.config.retry");
+    const maxAttempts = resolvePositiveInteger(
+      retryObject.max_attempts,
+      "config.sink.config.retry.max_attempts",
+      DEFAULT_POSTGRES_RETRY_MAX_ATTEMPTS,
+      true,
+    );
+    const backoffMs = resolvePositiveInteger(
+      retryObject.backoff_ms,
+      "config.sink.config.retry.backoff_ms",
+      DEFAULT_POSTGRES_RETRY_BACKOFF_MS,
+      true,
     );
 
     return {
@@ -104,6 +121,10 @@ export function resolveSinkConfig(rawSink: unknown, baseDir: string, defaultLogF
         connection_string: connectionString,
         table,
         timeout_ms: timeoutMs,
+        retry: {
+          max_attempts: maxAttempts,
+          backoff_ms: backoffMs,
+        },
       },
     };
   }
@@ -121,7 +142,7 @@ export function createLogSink(sinkConfig: SinkConfig): LogSink {
   }
 
   if (sinkConfig.name === "postgres") {
-    throw new Error('Sink "postgres" is configured but not implemented yet.');
+    return createPostgresSink(sinkConfig.config);
   }
 
   throw new Error(`Unsupported sink: ${(sinkConfig as { name: string }).name}`);
@@ -173,6 +194,15 @@ function resolvePositiveInteger(
     throw new Error(`${context} must be ${allowZero ? ">= 0" : "> 0"}`);
   }
   return numberValue;
+}
+
+function requireTableName(value: unknown, context: string): string {
+  const table = requireString(value, context);
+  const tablePattern = /^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)?$/;
+  if (!tablePattern.test(table)) {
+    throw new Error(`${context} must be a valid table identifier ("table" or "schema.table")`);
+  }
+  return table;
 }
 
 function resolvePathFromBase(value: string, baseDir: string): string {

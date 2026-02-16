@@ -27,6 +27,10 @@ export interface PostgresSinkConfig {
     connection_string: string;
     table: string;
     timeout_ms: number;
+    retry: {
+      max_attempts: number;
+      backoff_ms: number;
+    };
   };
 }
 

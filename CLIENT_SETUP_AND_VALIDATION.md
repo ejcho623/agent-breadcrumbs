@@ -94,7 +94,7 @@ Covers:
 - config file validation failures
 - legacy flag rejection with migration guidance
 - webhook envelope/header/retry behavior
-- startup behavior for unimplemented sinks (`postgres`)
+- postgres config validation + deterministic transport failure behavior
 - JSONL persistence shape (`log_record` + server metadata only)
 - guardrail rejection for oversized payloads
 - guardrail rejection for excessive nesting depth
@@ -111,12 +111,17 @@ Latest run (2026-02-16):
 ✔ webhook sink sends envelope and forwards headers
 ✔ webhook sink retries after timeout and eventually succeeds
 ✔ webhook sink returns deterministic non-2xx error and does not retry 4xx
-✔ server startup accepts postgres sink config but reports not implemented
+✔ server startup rejects invalid postgres table identifier
+✔ postgres sink returns deterministic transport error when database is unreachable
 ✔ guardrails reject oversized log_record payloads
 ✔ guardrails reject excessive nesting depth
 ✔ server remains responsive after repeated rejected requests
-tests 13
-pass 13
+✔ postgres sink maps auth failures to deterministic message
+✔ postgres sink retries timeout errors and then succeeds
+✔ postgres sink does not retry non-retryable query errors
+✔ postgres sink maps network failures to transport errors
+tests 18
+pass 18
 fail 0
 ```
 
@@ -128,12 +133,22 @@ npm run test:integration
 
 Latest run (2026-02-16):
 ```text
+﹣ postgres integration inserts one row per successful log_work call # SKIP (requires POSTGRES_TEST_URL)
 ✔ webhook integration retries scripted 5xx responses and then succeeds
 ✔ webhook integration returns deterministic error after retries are exhausted
-tests 2
-pass 2
+✔ postgres integration returns deterministic error for unreachable database
+﹣ postgres integration returns timeout error when insert exceeds configured timeout # SKIP (requires POSTGRES_TEST_URL)
+﹣ postgres integration returns deterministic authentication error for bad credentials # SKIP (requires POSTGRES_TEST_URL)
+tests 6
+pass 3
+skipped 3
 fail 0
 ```
+
+Postgres integration additions (run when `POSTGRES_TEST_URL` is set):
+- inserts one row per successful `log_work` call
+- returns timeout error when insert exceeds configured timeout
+- returns deterministic authentication error for bad credentials
 
 Sample persisted JSONL line:
 ```json

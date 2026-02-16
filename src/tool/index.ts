@@ -17,7 +17,7 @@ export function buildSinkDescription(sinkConfig: SinkConfig): string {
     return "Sink=webhook: POST envelope (log_id, server_timestamp, log_record) to configured endpoint; use log_id as idempotency key.";
   }
   if (sinkConfig.name === "postgres") {
-    return "Sink=postgres: configured from config file.";
+    return `Sink=postgres: insert envelope (log_id, server_timestamp, log_record) into ${sinkConfig.config.table}.`;
   }
   return "Sink=unknown.";
 }

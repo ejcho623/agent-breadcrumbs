@@ -12,15 +12,10 @@ export interface CliConfig {
 }
 
 export function parseCliArgs(argv: string[]): CliConfig {
-  const envLoggingMode = process.env.AGENT_BREADCRUMBS_LOGGING_MODE;
-  const envSink = process.env.AGENT_BREADCRUMBS_SINK;
-  const envLogFilePath = process.env.AGENT_BREADCRUMBS_LOG_FILE;
-
   let propertiesFile: string | undefined;
-  let loggingMode: LoggingMode =
-    envLoggingMode === "time" || envLoggingMode === "completion" ? envLoggingMode : "completion";
-  let sink: SinkName = envSink === "jsonl" ? "jsonl" : "jsonl";
-  let logFilePath = envLogFilePath ? resolvePath(envLogFilePath) : DEFAULT_LOG_FILE_PATH;
+  let loggingMode: LoggingMode = "completion";
+  let sink: SinkName = "jsonl";
+  let logFilePath = DEFAULT_LOG_FILE_PATH;
 
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
@@ -84,11 +79,6 @@ export function printHelpAndExit(exitCode: number): never {
     '  --logging-mode <completion|time>  Logging guidance mode (default: "completion")',
     '  --sink <jsonl>                 Sink connector to use (default: "jsonl")',
     "  --log-file <path>              JSONL sink output file",
-    "",
-    "Environment:",
-    "  AGENT_BREADCRUMBS_LOGGING_MODE",
-    "  AGENT_BREADCRUMBS_SINK",
-    "  AGENT_BREADCRUMBS_LOG_FILE",
     "  -h, --help                     Show help",
   ];
 

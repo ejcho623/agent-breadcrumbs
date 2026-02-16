@@ -1,7 +1,7 @@
 import { appendFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 
-import type { LogSink, PersistedRecord } from "./types.js";
+import type { LogSink, PersistedRecord } from "./index.js";
 
 export function createJsonlSink(logFilePath: string): LogSink {
   return {

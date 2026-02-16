@@ -24,7 +24,10 @@ Goal: lightweight, cross-vendor observability for agents with minimal setup and 
 ## Important Schema Clarification
 - MCP `inputSchema` is a JSON Schema contract used for tool validation/discovery.
 - JSON Schema metadata (`type`, `required`, `additionalProperties`, etc.) is not stored in the DB.
-- Actual row/document fields come from runtime values under `log_record`.
+- Persisted record shape is an envelope plus payload:
+  - envelope (server-managed): `log_id`, `server_timestamp`
+  - payload (schema-defined): `log_record`
+- `log_record` values come from runtime tool input and are the only schema-customizable persisted fields.
 - Runtime control settings (for example `logging_mode`) are operational inputs and should not be persisted as log row fields.
 - Customization scope: users replace `log_record.properties` only; server wraps it into full `inputSchema`.
 
@@ -47,6 +50,20 @@ Example tool result:
 {
   "ok": true,
   "log_id": "abc123"
+}
+```
+
+Example persisted record:
+```json
+{
+  "log_id": "abc123",
+  "server_timestamp": "2026-02-14T07:51:23.067Z",
+  "log_record": {
+    "agent_id": "agent-1",
+    "timestamp": "2026-02-14T07:51:23.063Z",
+    "work_summary": "completed milestone test",
+    "additional": { "source": "smoke" }
+  }
 }
 ```
 

@@ -76,7 +76,6 @@ Operational controls (for example `logging_mode`) are not persisted.
 
 Override location via:
 - CLI: `--log-file <path>`
-- Env: `AGENT_BREADCRUMBS_LOG_FILE=<path>`
 
 ## Guardrails (implementation-level)
 Current hard caps:

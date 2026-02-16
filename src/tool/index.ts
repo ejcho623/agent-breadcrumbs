@@ -14,7 +14,7 @@ export function buildSinkDescription(sinkConfig: SinkConfig): string {
     return `Sink=jsonl: persisted records are appended to ${sinkConfig.config.log_file}.`;
   }
   if (sinkConfig.name === "webhook") {
-    return "Sink=webhook: configured from config file.";
+    return "Sink=webhook: POST envelope (log_id, server_timestamp, log_record) to configured endpoint; use log_id as idempotency key.";
   }
   if (sinkConfig.name === "postgres") {
     return "Sink=postgres: configured from config file.";

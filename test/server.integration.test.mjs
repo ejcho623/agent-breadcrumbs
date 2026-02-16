@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { createServer } from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
@@ -78,6 +79,69 @@ async function runServerExpectStartupFailure({ args, cwd }) {
   });
 
   return stderrChunks.join('');
+}
+
+async function withWebhookServer(handler, run) {
+  const requests = [];
+  const server = createServer((req, res) => {
+    let rawBody = '';
+    req.setEncoding('utf8');
+    req.on('data', (chunk) => {
+      rawBody += chunk;
+    });
+    req.on('end', async () => {
+      let body = null;
+      if (rawBody.length > 0) {
+        body = JSON.parse(rawBody);
+      }
+
+      requests.push({
+        method: req.method,
+        headers: req.headers,
+        body,
+      });
+
+      try {
+        await handler({
+          req,
+          res,
+          attempt: requests.length,
+          request: requests[requests.length - 1],
+        });
+      } catch {
+        res.statusCode = 500;
+        res.end('handler_error');
+      }
+    });
+  });
+
+  await new Promise((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(0, '127.0.0.1', () => {
+      server.off('error', reject);
+      resolve();
+    });
+  });
+
+  try {
+    const address = server.address();
+    assert.ok(address && typeof address !== 'string');
+
+    await run(
+      {
+        url: `http://127.0.0.1:${address.port}/ingest`,
+        requests,
+      },
+    );
+  } finally {
+    await new Promise((resolve, reject) => {
+      server.close((error) => (error ? reject(error) : resolve()));
+    });
+  }
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 test('log_work success path persists only log_record + metadata', async () => {
@@ -245,30 +309,162 @@ test('server startup rejects legacy runtime flags with migration guidance', asyn
   }
 });
 
-test('server startup accepts webhook sink config but reports not implemented', async () => {
-  const cwd = await mkdtemp(path.join(os.tmpdir(), 'ab-webhook-not-impl-'));
+test('webhook sink sends envelope and forwards headers', async () => {
+  const cwd = await mkdtemp(path.join(os.tmpdir(), 'ab-webhook-success-'));
   const configPath = path.join(cwd, 'server-config.json');
   try {
-    await writeFile(
-      configPath,
-      JSON.stringify({
-        sink: {
-          name: 'webhook',
-          config: {
-            url: 'https://example.com/ingest',
-          },
-        },
-      }),
-      'utf8',
+    await withWebhookServer(
+      async ({ res }) => {
+        res.statusCode = 204;
+        res.end();
+      },
+      async ({ url, requests }) => {
+        await writeFile(
+          configPath,
+          JSON.stringify({
+            sink: {
+              name: 'webhook',
+              config: {
+                url,
+                headers: {
+                  authorization: 'Bearer secret-token',
+                  'x-source': 'integration-test',
+                },
+              },
+            },
+          }),
+          'utf8',
+        );
+
+        await withClient({ cwd, configPath }, async (client) => {
+          const result = await client.callTool({
+            name: 'log_work',
+            arguments: {
+              log_record: {
+                work_summary: 'webhook delivery',
+              },
+            },
+          });
+
+          assert.equal(result.isError, undefined);
+          assert.equal(result.structuredContent.ok, true);
+          assert.equal(typeof result.structuredContent.log_id, 'string');
+        });
+
+        assert.equal(requests.length, 1);
+        const request = requests[0];
+        assert.equal(request.method, 'POST');
+        assert.equal(request.headers.authorization, 'Bearer secret-token');
+        assert.equal(request.headers['x-source'], 'integration-test');
+        assert.match(request.headers['content-type'] ?? '', /application\/json/i);
+
+        assert.equal(typeof request.body.log_id, 'string');
+        assert.equal(typeof request.body.server_timestamp, 'string');
+        assert.equal(request.body.log_record.work_summary, 'webhook delivery');
+      },
     );
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
 
-    const stderr = await runServerExpectStartupFailure({
-      cwd,
-      args: ['--config', configPath],
-    });
+test('webhook sink retries after timeout and eventually succeeds', async () => {
+  const cwd = await mkdtemp(path.join(os.tmpdir(), 'ab-webhook-retry-'));
+  const configPath = path.join(cwd, 'server-config.json');
+  try {
+    await withWebhookServer(
+      async ({ res, attempt }) => {
+        if (attempt === 1) {
+          await sleep(120);
+        }
+        res.statusCode = 204;
+        res.end();
+      },
+      async ({ url, requests }) => {
+        await writeFile(
+          configPath,
+          JSON.stringify({
+            sink: {
+              name: 'webhook',
+              config: {
+                url,
+                timeout_ms: 25,
+                retry: {
+                  max_attempts: 1,
+                  backoff_ms: 1,
+                },
+              },
+            },
+          }),
+          'utf8',
+        );
 
-    assert.match(stderr, /webhook/i);
-    assert.match(stderr, /not implemented yet/i);
+        await withClient({ cwd, configPath }, async (client) => {
+          const result = await client.callTool({
+            name: 'log_work',
+            arguments: {
+              log_record: {
+                work_summary: 'timeout retry scenario',
+              },
+            },
+          });
+
+          assert.equal(result.isError, undefined);
+          assert.equal(result.structuredContent.ok, true);
+        });
+
+        assert.equal(requests.length, 2);
+      },
+    );
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
+test('webhook sink returns deterministic non-2xx error and does not retry 4xx', async () => {
+  const cwd = await mkdtemp(path.join(os.tmpdir(), 'ab-webhook-4xx-'));
+  const configPath = path.join(cwd, 'server-config.json');
+  try {
+    await withWebhookServer(
+      async ({ res }) => {
+        res.statusCode = 400;
+        res.end('bad request');
+      },
+      async ({ url, requests }) => {
+        await writeFile(
+          configPath,
+          JSON.stringify({
+            sink: {
+              name: 'webhook',
+              config: {
+                url,
+                retry: {
+                  max_attempts: 3,
+                  backoff_ms: 1,
+                },
+              },
+            },
+          }),
+          'utf8',
+        );
+
+        await withClient({ cwd, configPath }, async (client) => {
+          const result = await client.callTool({
+            name: 'log_work',
+            arguments: {
+              log_record: {
+                work_summary: 'expect non-2xx',
+              },
+            },
+          });
+
+          assert.equal(result.isError, true);
+          assert.match(result.content?.[0]?.text ?? '', /webhook endpoint responded with status 400/i);
+        });
+
+        assert.equal(requests.length, 1);
+      },
+    );
   } finally {
     await rm(cwd, { recursive: true, force: true });
   }

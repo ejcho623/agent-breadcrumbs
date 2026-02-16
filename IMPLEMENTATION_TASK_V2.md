@@ -50,18 +50,18 @@ Extend the server with first-class `webhook` and `postgres` sinks while keeping 
 
 ## Milestone 3: Webhook Sink
 ### Tasks
-- [ ] Implement HTTP POST sink with:
-  - [ ] URL
-  - [ ] headers
-  - [ ] timeout
-  - [ ] retry policy (bounded attempts/backoff)
-- [ ] Implement safe error classification (timeout vs non-2xx vs transport).
-- [ ] Add idempotency guidance using `log_id` in payload.
-- [ ] Add fast webhook tests (`npm test`) with in-process `node:http` server:
-  - [ ] request envelope shape (`log_id`, `server_timestamp`, `log_record`)
-  - [ ] header forwarding/auth behavior
-  - [ ] timeout + retry behavior on controlled failures
-- [ ] Add webhook integration tests (`npm run test:integration`) with scripted response patterns.
+- [x] Implement HTTP POST sink with:
+  - [x] URL
+  - [x] headers
+  - [x] timeout
+  - [x] retry policy (bounded attempts/backoff)
+- [x] Implement safe error classification (timeout vs non-2xx vs transport).
+- [x] Add idempotency guidance using `log_id` in payload.
+- [x] Add fast webhook tests (`npm test`) with in-process `node:http` server:
+  - [x] request envelope shape (`log_id`, `server_timestamp`, `log_record`)
+  - [x] header forwarding/auth behavior
+  - [x] timeout + retry behavior on controlled failures
+- [x] Add webhook integration tests (`npm run test:integration`) with scripted response patterns.
 
 ### Exit Criteria
 - Successful calls deliver envelope to configured endpoint.

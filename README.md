@@ -11,8 +11,8 @@ Minimal MCP server for logging agent work with low response overhead.
 - Minimal success ack: `{ "ok": true, "log_id": "..." }`
 
 Current sink status:
-- Implemented: `jsonl`
-- Config parsed but not implemented yet: `webhook`, `postgres`
+- Implemented: `jsonl`, `webhook`
+- Config parsed but not implemented yet: `postgres`
 
 ## Requirements
 - Node.js 18+
@@ -49,6 +49,26 @@ Sample config:
     "name": "jsonl",
     "config": {
       "log_file": "/tmp/agent-breadcrumbs/logs.jsonl"
+    }
+  }
+}
+```
+
+Webhook config sample:
+```json
+{
+  "sink": {
+    "name": "webhook",
+    "config": {
+      "url": "https://example.com/ingest",
+      "headers": {
+        "authorization": "Bearer <token>"
+      },
+      "timeout_ms": 3000,
+      "retry": {
+        "max_attempts": 2,
+        "backoff_ms": 250
+      }
     }
   }
 }
@@ -96,6 +116,7 @@ Over-limit payloads are rejected before write.
 ## Test
 ```bash
 npm test
+npm run test:integration
 ```
 
 ## Client setup and validation matrix

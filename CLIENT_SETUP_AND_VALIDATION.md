@@ -93,7 +93,8 @@ Covers:
 - invalid payload rejection
 - config file validation failures
 - legacy flag rejection with migration guidance
-- startup behavior for unimplemented sinks (`webhook`, `postgres`)
+- webhook envelope/header/retry behavior
+- startup behavior for unimplemented sinks (`postgres`)
 - JSONL persistence shape (`log_record` + server metadata only)
 - guardrail rejection for oversized payloads
 - guardrail rejection for excessive nesting depth
@@ -107,13 +108,30 @@ Latest run (2026-02-16):
 ✔ server startup fails when --config points to a missing file
 ✔ server startup fails when config file contains invalid JSON
 ✔ server startup rejects legacy runtime flags with migration guidance
-✔ server startup accepts webhook sink config but reports not implemented
+✔ webhook sink sends envelope and forwards headers
+✔ webhook sink retries after timeout and eventually succeeds
+✔ webhook sink returns deterministic non-2xx error and does not retry 4xx
 ✔ server startup accepts postgres sink config but reports not implemented
 ✔ guardrails reject oversized log_record payloads
 ✔ guardrails reject excessive nesting depth
 ✔ server remains responsive after repeated rejected requests
-tests 11
-pass 11
+tests 13
+pass 13
+fail 0
+```
+
+### Webhook integration tests
+Command:
+```bash
+npm run test:integration
+```
+
+Latest run (2026-02-16):
+```text
+✔ webhook integration retries scripted 5xx responses and then succeeds
+✔ webhook integration returns deterministic error after retries are exhausted
+tests 2
+pass 2
 fail 0
 ```
 

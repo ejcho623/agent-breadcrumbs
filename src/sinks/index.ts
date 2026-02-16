@@ -3,6 +3,7 @@ import path from "node:path";
 
 import type { SinkConfig } from "../types.js";
 import { createJsonlSink } from "./jsonl.js";
+import { createWebhookSink } from "./webhook.js";
 
 const DEFAULT_WEBHOOK_TIMEOUT_MS = 3000;
 const DEFAULT_WEBHOOK_RETRY_MAX_ATTEMPTS = 0;
@@ -116,7 +117,7 @@ export function createLogSink(sinkConfig: SinkConfig): LogSink {
   }
 
   if (sinkConfig.name === "webhook") {
-    throw new Error('Sink "webhook" is configured but not implemented yet.');
+    return createWebhookSink(sinkConfig.config);
   }
 
   if (sinkConfig.name === "postgres") {

@@ -1,0 +1,16 @@
+{
+  "sink": {
+    "name": "webhook",
+    "config": {
+      "url": "https://example.com/ingest",
+      "headers": {
+        "authorization": "Bearer <token>"
+      },
+      "timeout_ms": 3000,
+      "retry": {
+        "max_attempts": 2,
+        "backoff_ms": 250
+      }
+    }
+  }
+}

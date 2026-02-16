@@ -131,6 +131,16 @@ Command:
 npm run test:integration
 ```
 
+Prerequisites:
+- Set `POSTGRES_TEST_URL` to enable Postgres success/auth/timeout integration cases.
+- If `POSTGRES_TEST_URL` is unset, webhook integration tests still run and Postgres DB-backed cases are skipped.
+
+Example:
+```bash
+export POSTGRES_TEST_URL="postgres://user:password@localhost:5432/agent_breadcrumbs"
+npm run test:integration
+```
+
 Latest run (2026-02-16):
 ```text
 ﹣ postgres integration inserts one row per successful log_work call # SKIP (requires POSTGRES_TEST_URL)

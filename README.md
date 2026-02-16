@@ -37,7 +37,7 @@ With config file:
 npm start -- --config ./examples/server-config.sample.json
 ```
 
-Sample config:
+`jsonl` sample config:
 ```json
 {
   "schema": {
@@ -53,7 +53,7 @@ Sample config:
 }
 ```
 
-Webhook config sample:
+`webhook` sample config:
 ```json
 {
   "sink": {
@@ -73,7 +73,7 @@ Webhook config sample:
 }
 ```
 
-Postgres config sample:
+`postgres` sample config:
 ```json
 {
   "sink": {
@@ -90,6 +90,11 @@ Postgres config sample:
   }
 }
 ```
+
+Also available as files:
+- `/Users/ejcho/Documents/projects/agent-breadcrumbs/examples/server-config.sample.json`
+- `/Users/ejcho/Documents/projects/agent-breadcrumbs/examples/server-config.webhook.sample.json`
+- `/Users/ejcho/Documents/projects/agent-breadcrumbs/examples/server-config.postgres.sample.json`
 
 Postgres table bootstrap (recommended):
 ```sql
@@ -148,6 +153,12 @@ npm run test:integration
 `npm run test:integration` notes:
 - Postgres success + timeout integration cases run only when `POSTGRES_TEST_URL` is set.
 - The unreachable-Postgres case runs without `POSTGRES_TEST_URL`.
+
+Example:
+```bash
+export POSTGRES_TEST_URL="postgres://user:password@localhost:5432/agent_breadcrumbs"
+npm run test:integration
+```
 
 ## Client setup and validation matrix
 See `/Users/ejcho/Documents/projects/agent-breadcrumbs/CLIENT_SETUP_AND_VALIDATION.md`.

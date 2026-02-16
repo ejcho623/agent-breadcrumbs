@@ -1,5 +1,8 @@
 # Agent Breadcrumbs v2 Implementation Tasks (Webhook + Postgres Sinks)
 
+Status:
+- Milestones 1-5 complete.
+
 ## Objective
 Extend the server with first-class `webhook` and `postgres` sinks while keeping the MCP tool contract minimal (`log_work` + tiny ack) and configuration easy to reason about.
 

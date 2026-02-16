@@ -1,0 +1,10 @@
+{
+  "host": "127.0.0.1",
+  "port": 4319,
+  "logstore": {
+    "name": "jsonl",
+    "config": {
+      "file_path": "~/.agent-breadcrumbs/logs.jsonl"
+    }
+  }
+}

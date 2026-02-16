@@ -107,9 +107,14 @@ function loadRawConfig(configFile?: string): { rawConfig: Record<string, unknown
 }
 
 function resolvePath(value: string): string {
-  if (value.startsWith("~")) {
-    return path.resolve(os.homedir(), value.slice(1));
+  if (value === "~") {
+    return os.homedir();
   }
+
+  if (value.startsWith("~/")) {
+    return path.resolve(os.homedir(), value.slice(2));
+  }
+
   return path.isAbsolute(value) ? value : path.resolve(process.cwd(), value);
 }
 

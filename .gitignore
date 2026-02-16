@@ -1,5 +1,7 @@
 node_modules/
 dist/
+apps/dashboard/dist/
 data/
 .DS_Store
 examples/*.local.json
+apps/dashboard/examples/*.local.json

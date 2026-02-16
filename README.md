@@ -8,6 +8,7 @@ Minimal MCP server for logging agent work with low response overhead.
 - Config-first runtime via `--config <path>`
 - Tool input validation against active schema
 - Local JSONL persistence for quick testing (`jsonl` sink)
+- Generic read-only dashboard app (`apps/dashboard`)
 - Minimal success ack: `{ "ok": true, "log_id": "..." }`
 
 Current sink status:
@@ -26,16 +27,39 @@ npm install
 npm run build
 ```
 
+Build targets:
+- MCP server: `npm run build:server`
+- Dashboard app: `npm run build:dashboard`
+
 ## Run
-Default runtime config (no args):
+MCP server default runtime config (no args):
 ```bash
-npm start
+npm run start:server
 ```
 
-With config file:
+MCP server with config file:
 ```bash
-npm start -- --config ./examples/server-config.sample.json
+npm run start:server -- --config ./examples/server-config.sample.json
 ```
+
+Dashboard (Postgres source):
+```bash
+npm run start:dashboard -- --config ./apps/dashboard/examples/dashboard-config.postgres.sample.json
+```
+
+Dashboard (JSONL source):
+```bash
+npm run start:dashboard -- --config ./apps/dashboard/examples/dashboard-config.sample.json
+```
+
+Dashboard with no config file defaults to:
+- host: `127.0.0.1`
+- port: `4319`
+- log store: `jsonl` at `~/.agent-breadcrumbs/logs.jsonl`
+
+Dashboard config examples:
+- `/Users/ejcho/Documents/projects/agent-breadcrumbs/apps/dashboard/examples/dashboard-config.sample.json`
+- `/Users/ejcho/Documents/projects/agent-breadcrumbs/apps/dashboard/examples/dashboard-config.postgres.sample.json`
 
 `jsonl` sample config:
 ```json

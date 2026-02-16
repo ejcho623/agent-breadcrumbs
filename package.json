@@ -7,9 +7,15 @@
     "agent-breadcrumbs-mcp-server": "dist/index.js"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "dev": "tsx src/index.ts",
-    "start": "node dist/index.js",
+    "build": "npm run build:server && npm run build:dashboard",
+    "build:server": "tsc -p tsconfig.json",
+    "build:dashboard": "tsc -p apps/dashboard/tsconfig.json",
+    "dev": "npm run dev:server",
+    "dev:server": "tsx src/index.ts",
+    "dev:dashboard": "tsx apps/dashboard/src/index.ts",
+    "start": "npm run start:server",
+    "start:server": "node dist/index.js",
+    "start:dashboard": "node apps/dashboard/dist/index.js",
     "test": "npm run build && node --test test/*.test.mjs",
     "test:integration": "npm run build && node --test test/integration/*.test.mjs"
   },

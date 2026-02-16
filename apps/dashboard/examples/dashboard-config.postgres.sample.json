@@ -1,0 +1,12 @@
+{
+  "host": "127.0.0.1",
+  "port": 4319,
+  "logstore": {
+    "name": "postgres",
+    "config": {
+      "connection_string": "postgres://user:password@localhost:5432/agent_breadcrumbs",
+      "table": "public.agent_logs",
+      "scan_limit": 5000
+    }
+  }
+}

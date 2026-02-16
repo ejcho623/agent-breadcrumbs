@@ -206,9 +206,14 @@ function requireTableName(value: unknown, context: string): string {
 }
 
 function resolvePathFromBase(value: string, baseDir: string): string {
-  if (value.startsWith("~")) {
-    return path.resolve(os.homedir(), value.slice(1));
+  if (value === "~") {
+    return os.homedir();
   }
+
+  if (value.startsWith("~/")) {
+    return path.resolve(os.homedir(), value.slice(2));
+  }
+
   if (path.isAbsolute(value)) {
     return value;
   }

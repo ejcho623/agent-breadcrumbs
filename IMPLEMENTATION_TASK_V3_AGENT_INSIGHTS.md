@@ -1,21 +1,20 @@
-# Agent Breadcrumbs v3 Implementation Tasks (Agent Insights Platform)
+# Agent Breadcrumbs v3 Implementation Tasks (Agent Work Data Platform)
 
 ## Objective
-Evolve Agent Breadcrumbs from a sink-focused logger into an insights platform for small teams:
-- "What did agents do today?"
-- "How much output did agents generate across people/projects?"
-- "What is the auditable timeline of agent-assisted work?"
+Extend Agent Breadcrumbs from a sink-focused logger into a multi-use-case platform where logs power multiple downstream products and workflows:
+- observability and proactive insights
+- audit trail and traceability
+- lightweight delivery tracking
+- knowledge capture and reuse
 
 ## Product Positioning (v3)
-- Primary angle: **GitHub Insights for Agent Work**
-- First-class outcomes:
-  - team/agent productivity insights
-  - lightweight delivery tracking
-  - audit trail with searchable timelines
-- Deferred:
-  - deep incident management
-  - heavy project planning workflows
-  - rich document editing experiences
+- Core positioning: **Agent Work Data Platform**
+- First-class outcomes (parallel, not sequential):
+  - productivity/observability insights
+  - delivery tracking
+  - audit timeline and accountability
+  - knowledge capture signals for future reuse
+- Product surfaces can differ by schema profile and user needs; the platform should not assume a single UI narrative.
 
 ## Architectural Direction
 - Keep sink adapters (`jsonl`, `webhook`, `postgres`) for ingestion flexibility.
@@ -97,7 +96,7 @@ Evolve Agent Breadcrumbs from a sink-focused logger into an insights platform fo
 - Dashboard can render all v1 pages via API only (no DB-direct frontend queries).
 - API contract is storage-provider-ready for future non-Postgres backends.
 
-## Milestone 5: Dashboard v1 (Agent Insights)
+## Milestone 5: Reference App v1 (Observability + Delivery + Audit)
 ### Tasks
 - [ ] Create `apps/dashboard` with three initial pages:
   - [ ] Overview (volume, active agents, success/failure status trend)

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { spawn } from 'node:child_process';
 import { mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -13,10 +14,25 @@ const __dirname = path.dirname(__filename);
 const PROJECT_ROOT = path.resolve(__dirname, '..');
 const SERVER_ENTRY = path.join(PROJECT_ROOT, 'dist', 'index.js');
 
-async function withClient({ args = [], cwd }, run) {
+function buildDefaultConfig(cwd) {
+  return {
+    sink: {
+      name: 'jsonl',
+      config: {
+        log_file: path.join(cwd, 'data', 'logs.jsonl'),
+      },
+    },
+  };
+}
+
+async function withClient({ args = [], cwd, configPath }, run) {
   const effectiveArgs = [...args];
-  if (cwd && !effectiveArgs.includes('--log-file')) {
-    effectiveArgs.push('--log-file', path.join(cwd, 'data', 'logs.jsonl'));
+  if (cwd && !effectiveArgs.includes('--config')) {
+    const resolvedConfigPath = configPath ?? path.join(cwd, 'server-config.json');
+    if (!configPath) {
+      await writeFile(resolvedConfigPath, JSON.stringify(buildDefaultConfig(cwd)), 'utf8');
+    }
+    effectiveArgs.push('--config', resolvedConfigPath);
   }
 
   const transport = new StdioClientTransport({
@@ -33,6 +49,35 @@ async function withClient({ args = [], cwd }, run) {
   } finally {
     await client.close();
   }
+}
+
+async function runServerExpectStartupFailure({ args, cwd }) {
+  const stderrChunks = [];
+  const child = spawn(process.execPath, [SERVER_ENTRY, ...args], { cwd });
+  child.stderr.on('data', (chunk) => stderrChunks.push(chunk.toString('utf8')));
+
+  await new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      child.kill('SIGKILL');
+      reject(new Error('Server did not exit while expecting startup failure.'));
+    }, 3000);
+
+    child.on('error', (error) => {
+      clearTimeout(timeout);
+      reject(error);
+    });
+
+    child.on('exit', (code) => {
+      clearTimeout(timeout);
+      if (code === 0) {
+        reject(new Error('Expected non-zero exit code for startup failure.'));
+        return;
+      }
+      resolve();
+    });
+  });
+
+  return stderrChunks.join('');
 }
 
 test('log_work success path persists only log_record + metadata', async () => {
@@ -97,19 +142,27 @@ test('schema validation rejects missing required log_record', async () => {
 
 test('custom schema overrides default log_record properties', async () => {
   const cwd = await mkdtemp(path.join(os.tmpdir(), 'ab-custom-'));
-  const schemaPath = path.join(cwd, 'custom-properties.json');
+  const configPath = path.join(cwd, 'server-config.json');
 
   await writeFile(
-    schemaPath,
+    configPath,
     JSON.stringify({
-      task_id: { type: 'string' },
-      hours_spent: { type: 'number' },
+      schema: {
+        task_id: { type: 'string' },
+        hours_spent: { type: 'number' },
+      },
+      sink: {
+        name: 'jsonl',
+        config: {
+          log_file: path.join(cwd, 'data', 'logs.jsonl'),
+        },
+      },
     }),
     'utf8',
   );
 
   try {
-    await withClient({ cwd, args: ['--properties-file', schemaPath] }, async (client) => {
+    await withClient({ cwd, configPath }, async (client) => {
       const tools = await client.listTools();
       const logWork = tools.tools.find((tool) => tool.name === 'log_work');
       assert.ok(logWork);
@@ -141,6 +194,111 @@ test('custom schema overrides default log_record properties', async () => {
       assert.equal(valid.isError, undefined);
       assert.equal(valid.structuredContent.ok, true);
     });
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
+test('server startup fails when --config points to a missing file', async () => {
+  const cwd = await mkdtemp(path.join(os.tmpdir(), 'ab-missing-config-'));
+  try {
+    const stderr = await runServerExpectStartupFailure({
+      cwd,
+      args: ['--config', path.join(cwd, 'does-not-exist.json')],
+    });
+
+    assert.match(stderr, /failed to read config file/i);
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
+test('server startup fails when config file contains invalid JSON', async () => {
+  const cwd = await mkdtemp(path.join(os.tmpdir(), 'ab-invalid-config-'));
+  const configPath = path.join(cwd, 'broken-config.json');
+  try {
+    await writeFile(configPath, '{ invalid json', 'utf8');
+
+    const stderr = await runServerExpectStartupFailure({
+      cwd,
+      args: ['--config', configPath],
+    });
+
+    assert.match(stderr, /invalid json in config file/i);
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
+test('server startup rejects legacy runtime flags with migration guidance', async () => {
+  const cwd = await mkdtemp(path.join(os.tmpdir(), 'ab-legacy-flags-'));
+  try {
+    const stderr = await runServerExpectStartupFailure({
+      cwd,
+      args: ['--log-file', path.join(cwd, 'logs.jsonl')],
+    });
+
+    assert.match(stderr, /no longer supported/i);
+    assert.match(stderr, /use --config <path>/i);
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
+test('server startup accepts webhook sink config but reports not implemented', async () => {
+  const cwd = await mkdtemp(path.join(os.tmpdir(), 'ab-webhook-not-impl-'));
+  const configPath = path.join(cwd, 'server-config.json');
+  try {
+    await writeFile(
+      configPath,
+      JSON.stringify({
+        sink: {
+          name: 'webhook',
+          config: {
+            url: 'https://example.com/ingest',
+          },
+        },
+      }),
+      'utf8',
+    );
+
+    const stderr = await runServerExpectStartupFailure({
+      cwd,
+      args: ['--config', configPath],
+    });
+
+    assert.match(stderr, /webhook/i);
+    assert.match(stderr, /not implemented yet/i);
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
+test('server startup accepts postgres sink config but reports not implemented', async () => {
+  const cwd = await mkdtemp(path.join(os.tmpdir(), 'ab-postgres-not-impl-'));
+  const configPath = path.join(cwd, 'server-config.json');
+  try {
+    await writeFile(
+      configPath,
+      JSON.stringify({
+        sink: {
+          name: 'postgres',
+          config: {
+            connection_string: 'postgres://localhost:5432/db',
+            table: 'agent_logs',
+          },
+        },
+      }),
+      'utf8',
+    );
+
+    const stderr = await runServerExpectStartupFailure({
+      cwd,
+      args: ['--config', configPath],
+    });
+
+    assert.match(stderr, /postgres/i);
+    assert.match(stderr, /not implemented yet/i);
   } finally {
     await rm(cwd, { recursive: true, force: true });
   }

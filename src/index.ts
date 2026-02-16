@@ -7,9 +7,9 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { CallToolRequestSchema, ErrorCode, ListToolsRequestSchema, McpError, Tool } from "@modelcontextprotocol/sdk/types.js";
 
 import { SERVER_NAME, SERVER_VERSION, TOOL_NAME } from "./constants.js";
-import { parseCliArgs } from "./config/index.js";
+import { parseCliArgs, resolveRuntimeConfig } from "./config/index.js";
 import { validateLogRecordGuardrails, validateRequestSize } from "./guardrails/index.js";
-import { buildInputSchema, loadLogRecordProperties } from "./schema/index.js";
+import { buildInputSchema } from "./schema/index.js";
 import { buildToolArgumentsValidator, formatValidationErrors } from "./schema/validator.js";
 import { createLogSink } from "./sinks/index.js";
 import { buildSinkDescription, buildToolDescription, buildToolErrorResult, buildToolSuccessResult } from "./tool/index.js";
@@ -17,15 +17,15 @@ import type { ToolArguments } from "./types.js";
 
 async function main(): Promise<void> {
   const cliConfig = parseCliArgs(process.argv.slice(2));
+  const runtimeConfig = resolveRuntimeConfig(cliConfig);
 
-  const logSink = createLogSink(cliConfig.sink, cliConfig.logFilePath);
-  const { schemaSource, properties } = loadLogRecordProperties(cliConfig.propertiesFile);
-  const inputSchema = buildInputSchema(properties);
+  const logSink = createLogSink(runtimeConfig.sink);
+  const inputSchema = buildInputSchema(runtimeConfig.logRecordProperties);
   const validateToolArguments = buildToolArgumentsValidator(inputSchema);
 
   const logWorkTool: Tool = {
     name: TOOL_NAME,
-    description: `${buildToolDescription(schemaSource)} ${buildSinkDescription(cliConfig.sink, cliConfig.logFilePath)}`,
+    description: `${buildToolDescription(runtimeConfig.schemaSource)} ${buildSinkDescription(runtimeConfig.sink)}`,
     inputSchema,
   };
 

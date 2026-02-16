@@ -1,4 +1,4 @@
-import type { SchemaSource, SinkName } from "../types.js";
+import type { SchemaSource, SinkConfig } from "../types.js";
 
 export function buildToolDescription(schemaSource: SchemaSource): string {
   const schemaGuidance =
@@ -9,9 +9,15 @@ export function buildToolDescription(schemaSource: SchemaSource): string {
   return `Log agent work. Call on meaningful progress/completion. ${schemaGuidance}`;
 }
 
-export function buildSinkDescription(sink: SinkName, logFilePath: string): string {
-  if (sink === "jsonl") {
-    return `Sink=jsonl: persisted records are appended to ${logFilePath}.`;
+export function buildSinkDescription(sinkConfig: SinkConfig): string {
+  if (sinkConfig.name === "jsonl") {
+    return `Sink=jsonl: persisted records are appended to ${sinkConfig.config.log_file}.`;
+  }
+  if (sinkConfig.name === "webhook") {
+    return "Sink=webhook: configured from config file.";
+  }
+  if (sinkConfig.name === "postgres") {
+    return "Sink=postgres: configured from config file.";
   }
   return "Sink=unknown.";
 }

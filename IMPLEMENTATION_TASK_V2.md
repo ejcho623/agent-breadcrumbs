@@ -114,3 +114,6 @@ Extend the server with first-class `webhook` and `postgres` sinks while keeping 
 - Users can choose `jsonl`, `webhook`, or `postgres` via a single config file.
 - Persisted envelope contract is stable across all sinks.
 - Integration tests verify sink behavior and failure handling.
+
+## Follow-up
+- Next phase planning is tracked in `/Users/ejcho/Documents/projects/agent-breadcrumbs/IMPLEMENTATION_TASK_V3_AGENT_INSIGHTS.md`.

@@ -165,3 +165,6 @@ See `/Users/ejcho/Documents/projects/agent-breadcrumbs/CLIENT_SETUP_AND_VALIDATI
 
 ## Milestone status
 See `/Users/ejcho/Documents/projects/agent-breadcrumbs/IMPLEMENTATION_TASK_V2.md`.
+
+## Next roadmap
+See `/Users/ejcho/Documents/projects/agent-breadcrumbs/IMPLEMENTATION_TASK_V3_AGENT_INSIGHTS.md`.

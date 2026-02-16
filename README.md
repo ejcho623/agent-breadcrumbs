@@ -24,7 +24,7 @@ npm run build
 ```
 
 ## Run
-Default schema, default logging mode (`completion`):
+Default schema:
 ```bash
 npm start
 ```
@@ -34,11 +34,6 @@ With custom schema:
 npm start -- --properties-file ./examples/log-record-properties.sample.json
 ```
 
-With time guidance mode:
-```bash
-npm start -- --logging-mode time
-```
-
 With explicit sink file path:
 ```bash
 npm start -- --sink jsonl --log-file /tmp/agent-breadcrumbs/logs.jsonl
@@ -46,7 +41,6 @@ npm start -- --sink jsonl --log-file /tmp/agent-breadcrumbs/logs.jsonl
 
 ## Tool shape
 `log_work` input schema is built as:
-- top-level `logging_mode` (`completion` | `time`)
 - top-level `log_record` (persisted fields)
 - required: `log_record`
 
@@ -71,8 +65,6 @@ Persisted entries include:
 - `log_id`
 - `server_timestamp`
 - `log_record`
-
-Operational controls (for example `logging_mode`) are not persisted.
 
 Override location via:
 - CLI: `--log-file <path>`

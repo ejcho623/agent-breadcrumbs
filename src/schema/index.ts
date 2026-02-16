@@ -52,7 +52,6 @@ export function buildInputSchema(logRecordProperties: LogRecordProperties): Tool
   return {
     type: "object",
     properties: {
-      logging_mode: { type: "string", enum: ["completion", "time"] },
       log_record: {
         type: "object",
         properties: logRecordProperties,

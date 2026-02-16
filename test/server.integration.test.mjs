@@ -52,7 +52,6 @@ test('log_work success path persists only log_record + metadata', async () => {
             work_summary: 'completed integration test',
             additional: { source: 'test' },
           },
-          logging_mode: 'time',
         },
       });
 
@@ -71,7 +70,6 @@ test('log_work success path persists only log_record + metadata', async () => {
     assert.equal(typeof record.server_timestamp, 'string');
     assert.equal(record.log_record.agent_id, 'agent-1');
     assert.equal(record.log_record.work_summary, 'completed integration test');
-    assert.equal(Object.hasOwn(record, 'logging_mode'), false);
   } finally {
     await rm(cwd, { recursive: true, force: true });
   }
@@ -83,9 +81,7 @@ test('schema validation rejects missing required log_record', async () => {
     await withClient({ cwd }, async (client) => {
       const result = await client.callTool({
         name: 'log_work',
-        arguments: {
-          logging_mode: 'completion',
-        },
+        arguments: {},
       });
 
       assert.equal(result.isError, true);
@@ -113,12 +109,11 @@ test('custom schema overrides default log_record properties', async () => {
   );
 
   try {
-    await withClient({ cwd, args: ['--properties-file', schemaPath, '--logging-mode', 'time'] }, async (client) => {
+    await withClient({ cwd, args: ['--properties-file', schemaPath] }, async (client) => {
       const tools = await client.listTools();
       const logWork = tools.tools.find((tool) => tool.name === 'log_work');
       assert.ok(logWork);
       assert.match(logWork.description ?? '', /Schema source=custom/i);
-      assert.match(logWork.description ?? '', /Default mode=time/i);
 
       const invalid = await client.callTool({
         name: 'log_work',

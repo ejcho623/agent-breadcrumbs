@@ -7,7 +7,6 @@ Ship a minimal MCP server that can be run locally and tested from agent clients 
 - In scope:
   - MCP server with `tools/list` + `tools/call` for `log_work`
   - `inputSchema` built from default `log_record` schema or custom schema file
-  - Top-level operational input: `logging_mode` (`completion` | `time`)
   - Persist only `log_record` fields
   - Minimal ack response: `{ "ok": true, "log_id": "..." }`
   - Local destination for testing (JSONL file)
@@ -23,8 +22,9 @@ Ship a minimal MCP server that can be run locally and tested from agent clients 
 - [x] Implement `tools/list` returning `log_work`.
 - [x] Add CLI args:
   - [x] `--properties-file <path>`
-  - [x] `--logging-mode <completion|time>` (default `completion`)
-- [x] Generate `log_work.description` from active logging mode + schema source.
+  - [x] `--sink <jsonl>`
+  - [x] `--log-file <path>`
+- [x] Generate `log_work.description` from active schema source.
 
 ### Exit Criteria
 - Server starts from terminal without errors.
@@ -35,7 +35,6 @@ Ship a minimal MCP server that can be run locally and tested from agent clients 
 - [x] Define default `log_record` schema.
 - [x] Load optional custom schema file (interpreted as `log_record.properties`).
 - [x] Assemble final `inputSchema`:
-  - [x] top-level `logging_mode`
   - [x] top-level `log_record` (object)
   - [x] `required: ["log_record"]`
 - [x] Validate incoming `log_work` args against active schema.
@@ -52,13 +51,12 @@ Ship a minimal MCP server that can be run locally and tested from agent clients 
 - [x] Persist only:
   - [x] `log_record`
   - [x] generated metadata (`log_id`, server timestamp)
-- [x] Do not persist operational controls (e.g. top-level `logging_mode`).
 - [x] Return minimal ack only.
 
 ### Exit Criteria
 - Each valid call appends one line.
 - Ack format is exactly minimal contract.
-- Stored record excludes `logging_mode`.
+- Stored record includes only `log_record` + server metadata.
 
 ## Milestone 4: Guardrails (Implementation-Level)
 ### Tasks
@@ -80,8 +78,8 @@ Ship a minimal MCP server that can be run locally and tested from agent clients 
   - [x] Claude Desktop
   - [x] ChatGPT (MCP server config)
 - [x] Test scenarios:
-  - [x] `logging_mode=completion` happy path
-  - [x] `logging_mode=time` guidance visible in tool description
+  - [x] happy path
+  - [x] tool description reflects schema source guidance
   - [x] Custom schema file path load
   - [x] Invalid payload rejection
 - [x] Capture test evidence (commands + expected/actual + sample log lines).
@@ -112,6 +110,5 @@ Ship a minimal MCP server that can be run locally and tested from agent clients 
 ## v1 Definition of Done
 - `log_work` is discoverable and callable from local MCP clients.
 - Active schema is default or custom (`--properties-file`).
-- `logging_mode` guidance is reflected in tool description.
 - Persisted output contains only `log_record` + server metadata.
 - Minimal ack response contract is stable.

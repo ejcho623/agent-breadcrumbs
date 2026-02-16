@@ -15,9 +15,7 @@ Goal: lightweight, cross-vendor observability for agents with minimal setup and 
 - One active log-record field schema at runtime:
   - Default log-record schema if no custom schema is provided.
   - Custom log-record schema if provided at startup.
-- `log_work` input has:
-  - top-level operational controls (for example `logging_mode`), not persisted.
-  - `log_record` object containing fields that are persisted.
+- `log_work` input has `log_record` object containing fields that are persisted.
 - Always validate tool input against active schema.
 - Return minimal ack response only.
 
@@ -28,7 +26,6 @@ Goal: lightweight, cross-vendor observability for agents with minimal setup and 
   - envelope (server-managed): `log_id`, `server_timestamp`
   - payload (schema-defined): `log_record`
 - `log_record` values come from runtime tool input and are the only schema-customizable persisted fields.
-- Runtime control settings (for example `logging_mode`) are operational inputs and should not be persisted as log row fields.
 - Customization scope: users replace `log_record.properties` only; server wraps it into full `inputSchema`.
 
 ## MCP Tool Contract
@@ -36,14 +33,11 @@ Tool name: `log_work`
 
 Recommended tool description guidance:
 - The server should generate `log_work.description` at startup based on:
-  - default `logging_mode` (`completion` or `time`)
   - active schema source (default log-record schema vs user-provided custom `log_record.properties`)
 - Description should reflect logging policy and current field contract.
-- `inputSchema.properties` should include top-level operational inputs plus `log_record`.
-- Example (`completion` + default schema):
-  - `Log agent work events on meaningful progress/completion. Use top-level logging_mode and provide persisted fields under log_record.`
-- Example (`time` + custom schema):
-  - `Log agent work events on a regular interval when possible (best-effort on unmanaged clients). Use top-level logging_mode and provide custom persisted fields under log_record.`
+- `inputSchema.properties` should include `log_record`.
+- Example description:
+  - `Log agent work events on meaningful progress/completion. Provide persisted fields under log_record.`
 
 Example tool result:
 ```json
@@ -72,7 +66,6 @@ Example persisted record:
 {
   "type": "object",
   "properties": {
-    "logging_mode": { "type": "string", "enum": ["completion", "time"] },
     "log_record": {
       "type": "object",
       "properties": {
@@ -103,7 +96,6 @@ Server wraps custom log-record schema into:
 {
   "type": "object",
   "properties": {
-    "logging_mode": { "type": "string", "enum": ["completion", "time"] },
     "log_record": {
       "type": "object",
       "properties": {
@@ -126,14 +118,9 @@ Server wraps custom log-record schema into:
 ## Client Logging Guidance
 - Put logging behavior guidance in the MCP tool definition (`description`).
 - Treat tool description text as runtime-generated, not static.
-- If `logging_mode=completion`, description should instruct progress/completion-triggered logging.
-- If `logging_mode=time`, description should instruct periodic logging and note best-effort behavior on unmanaged clients.
+- Description should instruct progress/completion-triggered logging.
 - If custom log-record fields are loaded, description should explicitly say the active persisted field contract is custom and defined by `inputSchema.properties.log_record.properties`.
 - If default log-record fields are used, description should explicitly say the default persisted field contract is active.
-- `logging_mode` values (operational input, not persisted):
-  - `completion`: client should call `log_work` on meaningful progress/completion.
-  - `time`: client should call `log_work` on a regular interval when possible.
-- For unmanaged clients (for example Claude/ChatGPT integrations you do not control), `time` is advisory and best-effort, not guaranteed scheduling.
 - MCP servers cannot force future timed tool calls; tool calls are initiated by the client/model runtime.
 
 ## Setup
@@ -148,21 +135,16 @@ npx -y @agent-breadcrumbs/mcp-server
 npx -y @agent-breadcrumbs/mcp-server --properties-file /path/to/log-properties.json
 ```
 
-### 3) Start MCP server with a logging mode
-```bash
-npx -y @agent-breadcrumbs/mcp-server --logging-mode time
-```
-
-### 4) Codex config example (default)
+### 3) Codex config example (default)
 ```toml
 [mcp_servers.agent_breadcrumbs]
 command = "npx"
 args = ["-y", "@agent-breadcrumbs/mcp-server"]
 ```
 
-### 5) Codex config example (custom log-record properties file + logging mode)
+### 4) Codex config example (custom log-record properties file)
 ```toml
 [mcp_servers.agent_breadcrumbs]
 command = "npx"
-args = ["-y", "@agent-breadcrumbs/mcp-server", "--properties-file", "/path/to/log-properties.json", "--logging-mode", "time"]
+args = ["-y", "@agent-breadcrumbs/mcp-server", "--properties-file", "/path/to/log-properties.json"]
 ```

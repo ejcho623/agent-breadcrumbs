@@ -5,32 +5,32 @@ This file tracks setup snippets for supported clients and evidence from local va
 ## 1) Codex
 Add server via CLI:
 ```bash
-codex mcp add agent-breadcrumbs -- node /Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js --logging-mode completion --sink jsonl --log-file /Users/ejcho/.agent-breadcrumbs/logs.jsonl
+codex mcp add agent-breadcrumbs -- node /Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js --sink jsonl --log-file /Users/ejcho/.agent-breadcrumbs/logs.jsonl
 ```
 
 Or via config (`~/.codex/config.toml`):
 ```toml
 [mcp_servers.agent_breadcrumbs]
 command = "node"
-args = ["/Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js", "--logging-mode", "completion"]
+args = ["/Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js"]
 ```
 
 Recommended explicit sink path version:
 ```toml
 [mcp_servers.agent_breadcrumbs]
 command = "node"
-args = ["/Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js", "--logging-mode", "completion", "--sink", "jsonl", "--log-file", "/Users/ejcho/.agent-breadcrumbs/logs.jsonl"]
+args = ["/Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js", "--sink", "jsonl", "--log-file", "/Users/ejcho/.agent-breadcrumbs/logs.jsonl"]
 ```
 
 ## 2) Claude Code
 Add server via CLI:
 ```bash
-claude mcp add agent-breadcrumbs node /Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js --logging-mode completion --sink jsonl --log-file /Users/ejcho/.agent-breadcrumbs/logs.jsonl
+claude mcp add agent-breadcrumbs node /Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js --sink jsonl --log-file /Users/ejcho/.agent-breadcrumbs/logs.jsonl
 ```
 
 Project-scoped JSON alternative:
 ```bash
-claude mcp add-json agent-breadcrumbs '{"type":"stdio","command":"node","args":["/Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js","--logging-mode","completion","--sink","jsonl","--log-file","/Users/ejcho/.agent-breadcrumbs/logs.jsonl"]}'
+claude mcp add-json agent-breadcrumbs '{"type":"stdio","command":"node","args":["/Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js","--sink","jsonl","--log-file","/Users/ejcho/.agent-breadcrumbs/logs.jsonl"]}'
 ```
 
 ## 3) Cursor
@@ -42,8 +42,6 @@ Project config (`.cursor/mcp.json`) or global (`~/.cursor/mcp.json`):
       "command": "node",
       "args": [
         "/Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js",
-        "--logging-mode",
-        "completion",
         "--sink",
         "jsonl",
         "--log-file",
@@ -63,8 +61,6 @@ In Claude Desktop: Settings -> Developer -> Edit Config, then add:
       "command": "node",
       "args": [
         "/Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js",
-        "--logging-mode",
-        "completion",
         "--sink",
         "jsonl",
         "--log-file",
@@ -89,8 +85,7 @@ npm test
 ```
 
 Covers:
-- `logging_mode=completion` happy path
-- `logging_mode=time` guidance visible in tool description
+- happy path with default tool contract
 - custom schema file load + validation
 - invalid payload rejection
 - JSONL persistence shape (`log_record` + server metadata only)

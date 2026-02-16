@@ -1,17 +1,12 @@
-import type { LoggingMode, SchemaSource, SinkName } from "../types.js";
+import type { SchemaSource, SinkName } from "../types.js";
 
-export function buildToolDescription(defaultLoggingMode: LoggingMode, schemaSource: SchemaSource): string {
-  const modeGuidance =
-    defaultLoggingMode === "completion"
-      ? "Default mode=completion: call on meaningful progress/completion."
-      : "Default mode=time: call periodically when possible (best-effort on unmanaged clients).";
-
+export function buildToolDescription(schemaSource: SchemaSource): string {
   const schemaGuidance =
     schemaSource === "custom"
       ? "Schema source=custom: persisted fields are defined by inputSchema.properties.log_record.properties."
       : "Schema source=default: persisted fields use the default log_record schema.";
 
-  return `Log agent work. ${modeGuidance} Per-call logging_mode may override default. ${schemaGuidance}`;
+  return `Log agent work. Call on meaningful progress/completion. ${schemaGuidance}`;
 }
 
 export function buildSinkDescription(sink: SinkName, logFilePath: string): string {

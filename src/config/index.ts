@@ -2,18 +2,16 @@ import os from "node:os";
 import path from "node:path";
 
 import { DEFAULT_LOG_FILE_PATH } from "../constants.js";
-import type { LoggingMode, SinkName } from "../types.js";
+import type { SinkName } from "../types.js";
 
 export interface CliConfig {
   propertiesFile?: string;
-  loggingMode: LoggingMode;
   sink: SinkName;
   logFilePath: string;
 }
 
 export function parseCliArgs(argv: string[]): CliConfig {
   let propertiesFile: string | undefined;
-  let loggingMode: LoggingMode = "completion";
   let sink: SinkName = "jsonl";
   let logFilePath = DEFAULT_LOG_FILE_PATH;
 
@@ -26,16 +24,6 @@ export function parseCliArgs(argv: string[]): CliConfig {
         throw new Error("Missing value for --properties-file");
       }
       propertiesFile = next;
-      i += 1;
-      continue;
-    }
-
-    if (arg === "--logging-mode") {
-      const next = argv[i + 1];
-      if (next !== "completion" && next !== "time") {
-        throw new Error('Invalid value for --logging-mode. Use "completion" or "time".');
-      }
-      loggingMode = next;
       i += 1;
       continue;
     }
@@ -67,7 +55,7 @@ export function parseCliArgs(argv: string[]): CliConfig {
     throw new Error(`Unknown argument: ${arg}`);
   }
 
-  return { propertiesFile, loggingMode, sink, logFilePath };
+  return { propertiesFile, sink, logFilePath };
 }
 
 export function printHelpAndExit(exitCode: number): never {
@@ -76,7 +64,6 @@ export function printHelpAndExit(exitCode: number): never {
     "",
     "Options:",
     "  --properties-file <path>       JSON file for custom log_record.properties",
-    '  --logging-mode <completion|time>  Logging guidance mode (default: "completion")',
     '  --sink <jsonl>                 Sink connector to use (default: "jsonl")',
     "  --log-file <path>              JSONL sink output file",
     "  -h, --help                     Show help",

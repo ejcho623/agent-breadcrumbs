@@ -2,13 +2,17 @@
 
 Minimal MCP server for logging agent work with low response overhead.
 
-## What v1 includes
+## What the current build includes
 - One tool: `log_work`
-- Active schema from default `log_record` fields or `--properties-file`
-- Sink model with connector selection (`--sink`)
+- Active schema from default `log_record` fields or inline `config.schema`
+- Config-first runtime via `--config <path>`
 - Tool input validation against active schema
-- Local JSONL persistence for quick testing
+- Local JSONL persistence for quick testing (`jsonl` sink)
 - Minimal success ack: `{ "ok": true, "log_id": "..." }`
+
+Current sink status:
+- Implemented: `jsonl`
+- Config parsed but not implemented yet: `webhook`, `postgres`
 
 ## Requirements
 - Node.js 18+
@@ -24,19 +28,30 @@ npm run build
 ```
 
 ## Run
-Default schema:
+Default runtime config (no args):
 ```bash
 npm start
 ```
 
-With custom schema:
+With config file:
 ```bash
-npm start -- --properties-file ./examples/log-record-properties.sample.json
+npm start -- --config ./examples/server-config.sample.json
 ```
 
-With explicit sink file path:
-```bash
-npm start -- --sink jsonl --log-file /tmp/agent-breadcrumbs/logs.jsonl
+Sample config:
+```json
+{
+  "schema": {
+    "task_id": { "type": "string" },
+    "hours_spent": { "type": "number" }
+  },
+  "sink": {
+    "name": "jsonl",
+    "config": {
+      "log_file": "/tmp/agent-breadcrumbs/logs.jsonl"
+    }
+  }
+}
 ```
 
 ## Tool shape
@@ -54,7 +69,7 @@ Default `log_record` properties:
 }
 ```
 
-## Persistence behavior (v1)
+## Persistence behavior
 Default sink:
 - `jsonl`
 
@@ -67,7 +82,7 @@ Persisted entries include:
 - `log_record`
 
 Override location via:
-- CLI: `--log-file <path>`
+- config file: `sink.config.log_file`
 
 ## Guardrails (implementation-level)
 Current hard caps:
@@ -87,4 +102,4 @@ npm test
 See `/Users/ejcho/Documents/projects/agent-breadcrumbs/CLIENT_SETUP_AND_VALIDATION.md`.
 
 ## Milestone status
-See `/Users/ejcho/Documents/projects/agent-breadcrumbs/IMPLEMENTATION_TASK.md`.
+See `/Users/ejcho/Documents/projects/agent-breadcrumbs/IMPLEMENTATION_TASK_V2.md`.

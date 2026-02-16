@@ -1,36 +1,43 @@
-# Client Setup And Validation (v1)
+# Client Setup And Validation (config-first runtime)
 
 This file tracks setup snippets for supported clients and evidence from local validation runs.
+
+## Shared config file
+Create a server config file and reference it from client startup args:
+
+```json
+{
+  "sink": {
+    "name": "jsonl",
+    "config": {
+      "log_file": "/Users/ejcho/.agent-breadcrumbs/logs.jsonl"
+    }
+  }
+}
+```
 
 ## 1) Codex
 Add server via CLI:
 ```bash
-codex mcp add agent-breadcrumbs -- node /Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js --sink jsonl --log-file /Users/ejcho/.agent-breadcrumbs/logs.jsonl
+codex mcp add agent-breadcrumbs -- node /Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js --config /Users/ejcho/.agent-breadcrumbs/server-config.json
 ```
 
 Or via config (`~/.codex/config.toml`):
 ```toml
 [mcp_servers.agent_breadcrumbs]
 command = "node"
-args = ["/Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js"]
-```
-
-Recommended explicit sink path version:
-```toml
-[mcp_servers.agent_breadcrumbs]
-command = "node"
-args = ["/Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js", "--sink", "jsonl", "--log-file", "/Users/ejcho/.agent-breadcrumbs/logs.jsonl"]
+args = ["/Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js", "--config", "/Users/ejcho/.agent-breadcrumbs/server-config.json"]
 ```
 
 ## 2) Claude Code
 Add server via CLI:
 ```bash
-claude mcp add agent-breadcrumbs node /Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js --sink jsonl --log-file /Users/ejcho/.agent-breadcrumbs/logs.jsonl
+claude mcp add agent-breadcrumbs node /Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js --config /Users/ejcho/.agent-breadcrumbs/server-config.json
 ```
 
 Project-scoped JSON alternative:
 ```bash
-claude mcp add-json agent-breadcrumbs '{"type":"stdio","command":"node","args":["/Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js","--sink","jsonl","--log-file","/Users/ejcho/.agent-breadcrumbs/logs.jsonl"]}'
+claude mcp add-json agent-breadcrumbs '{"type":"stdio","command":"node","args":["/Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js","--config","/Users/ejcho/.agent-breadcrumbs/server-config.json"]}'
 ```
 
 ## 3) Cursor
@@ -42,10 +49,8 @@ Project config (`.cursor/mcp.json`) or global (`~/.cursor/mcp.json`):
       "command": "node",
       "args": [
         "/Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js",
-        "--sink",
-        "jsonl",
-        "--log-file",
-        "/Users/ejcho/.agent-breadcrumbs/logs.jsonl"
+        "--config",
+        "/Users/ejcho/.agent-breadcrumbs/server-config.json"
       ]
     }
   }
@@ -61,10 +66,8 @@ In Claude Desktop: Settings -> Developer -> Edit Config, then add:
       "command": "node",
       "args": [
         "/Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js",
-        "--sink",
-        "jsonl",
-        "--log-file",
-        "/Users/ejcho/.agent-breadcrumbs/logs.jsonl"
+        "--config",
+        "/Users/ejcho/.agent-breadcrumbs/server-config.json"
       ]
     }
   }
@@ -86,23 +89,31 @@ npm test
 
 Covers:
 - happy path with default tool contract
-- custom schema file load + validation
+- custom schema load + validation
 - invalid payload rejection
+- config file validation failures
+- legacy flag rejection with migration guidance
+- startup behavior for unimplemented sinks (`webhook`, `postgres`)
 - JSONL persistence shape (`log_record` + server metadata only)
 - guardrail rejection for oversized payloads
 - guardrail rejection for excessive nesting depth
 - resilience after repeated rejected payloads
 
-Latest run (2026-02-14):
+Latest run (2026-02-16):
 ```text
 ✔ log_work success path persists only log_record + metadata
 ✔ schema validation rejects missing required log_record
 ✔ custom schema overrides default log_record properties
+✔ server startup fails when --config points to a missing file
+✔ server startup fails when config file contains invalid JSON
+✔ server startup rejects legacy runtime flags with migration guidance
+✔ server startup accepts webhook sink config but reports not implemented
+✔ server startup accepts postgres sink config but reports not implemented
 ✔ guardrails reject oversized log_record payloads
 ✔ guardrails reject excessive nesting depth
 ✔ server remains responsive after repeated rejected requests
-tests 6
-pass 6
+tests 11
+pass 11
 fail 0
 ```
 

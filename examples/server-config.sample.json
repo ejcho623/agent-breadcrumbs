@@ -1,0 +1,12 @@
+{
+  "schema": {
+    "task_id": { "type": "string" },
+    "hours_spent": { "type": "number" }
+  },
+  "sink": {
+    "name": "jsonl",
+    "config": {
+      "log_file": "/tmp/agent-breadcrumbs/logs.jsonl"
+    }
+  }
+}

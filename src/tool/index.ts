@@ -1,7 +1,10 @@
-import type { SchemaSource, SinkConfig } from "../types.js";
+import type { SchemaProfileName, SchemaSource, SinkConfig } from "../types.js";
 
-export function buildToolDescription(schemaSource: SchemaSource): string {
+export function buildToolDescription(schemaSource: SchemaSource, schemaProfileName?: SchemaProfileName): string {
   const schemaGuidance =
+    schemaSource === "profile"
+      ? `Schema source=profile (${schemaProfileName ?? "unknown"}): persisted fields use the selected profile schema.`
+      :
     schemaSource === "custom"
       ? "Schema source=custom: persisted fields are defined by inputSchema.properties.log_record.properties."
       : "Schema source=default: persisted fields use the default log_record schema.";

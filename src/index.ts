@@ -25,7 +25,7 @@ async function main(): Promise<void> {
 
   const logWorkTool: Tool = {
     name: TOOL_NAME,
-    description: `${buildToolDescription(runtimeConfig.schemaSource)} ${buildSinkDescription(runtimeConfig.sink)}`,
+    description: `${buildToolDescription(runtimeConfig.schemaSource, runtimeConfig.schemaProfileName)} ${buildSinkDescription(runtimeConfig.sink)}`,
     inputSchema,
   };
 

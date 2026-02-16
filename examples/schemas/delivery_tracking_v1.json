@@ -1,0 +1,17 @@
+{
+  "schema_profile": { "type": "string" },
+  "schema_version": { "type": "string" },
+  "team_id": { "type": "string" },
+  "project_id": { "type": "string" },
+  "initiative_id": { "type": "string" },
+  "milestone_id": { "type": "string" },
+  "task_id": { "type": "string" },
+  "delivery_id": { "type": "string" },
+  "artifact_ref": { "type": "string" },
+  "event_type": { "type": "string" },
+  "status": { "type": "string" },
+  "delivered_at": { "type": "string", "format": "date-time" },
+  "effort_hours": { "type": "number" },
+  "work_summary": { "type": "string" },
+  "additional": { "type": "object" }
+}

@@ -1,0 +1,9 @@
+{
+  "schema_profile": "knowledge_capture_v1",
+  "sink": {
+    "name": "jsonl",
+    "config": {
+      "log_file": "/tmp/agent-breadcrumbs/knowledge-capture.logs.jsonl"
+    }
+  }
+}

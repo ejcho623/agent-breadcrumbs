@@ -1,0 +1,9 @@
+{
+  "schema_profile": "audit_trail_v1",
+  "sink": {
+    "name": "jsonl",
+    "config": {
+      "log_file": "/tmp/agent-breadcrumbs/audit-trail.logs.jsonl"
+    }
+  }
+}

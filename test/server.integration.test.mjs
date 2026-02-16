@@ -263,6 +263,61 @@ test('custom schema overrides default log_record properties', async () => {
   }
 });
 
+test('schema_profile applies built-in profile schema validation', async () => {
+  const cwd = await mkdtemp(path.join(os.tmpdir(), 'ab-schema-profile-'));
+  const configPath = path.join(cwd, 'server-config.json');
+
+  await writeFile(
+    configPath,
+    JSON.stringify({
+      schema_profile: 'agent_insights_v1',
+      sink: {
+        name: 'jsonl',
+        config: {
+          log_file: path.join(cwd, 'data', 'logs.jsonl'),
+        },
+      },
+    }),
+    'utf8',
+  );
+
+  try {
+    await withClient({ cwd, configPath }, async (client) => {
+      const tools = await client.listTools();
+      const logWork = tools.tools.find((tool) => tool.name === 'log_work');
+      assert.ok(logWork);
+      assert.match(logWork.description ?? '', /Schema source=profile \(agent_insights_v1\)/i);
+
+      const invalid = await client.callTool({
+        name: 'log_work',
+        arguments: {
+          log_record: {
+            duration_ms: '42',
+          },
+        },
+      });
+
+      assert.equal(invalid.isError, true);
+      assert.match(invalid.content?.[0]?.text ?? '', /must be number/i);
+
+      const valid = await client.callTool({
+        name: 'log_work',
+        arguments: {
+          log_record: {
+            duration_ms: 42,
+            effort_hours: '2',
+          },
+        },
+      });
+
+      assert.equal(valid.isError, undefined);
+      assert.equal(valid.structuredContent.ok, true);
+    });
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
 test('server startup fails when --config points to a missing file', async () => {
   const cwd = await mkdtemp(path.join(os.tmpdir(), 'ab-missing-config-'));
   try {
@@ -289,6 +344,58 @@ test('server startup fails when config file contains invalid JSON', async () => 
     });
 
     assert.match(stderr, /invalid json in config file/i);
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
+test('server startup fails when schema_profile is unknown', async () => {
+  const cwd = await mkdtemp(path.join(os.tmpdir(), 'ab-unknown-schema-profile-'));
+  const configPath = path.join(cwd, 'server-config.json');
+  try {
+    await writeFile(
+      configPath,
+      JSON.stringify({
+        schema_profile: 'nonexistent_profile_v1',
+      }),
+      'utf8',
+    );
+
+    const stderr = await runServerExpectStartupFailure({
+      cwd,
+      args: ['--config', configPath],
+    });
+
+    assert.match(stderr, /unknown config\.schema_profile/i);
+    assert.match(stderr, /supported profiles/i);
+    assert.match(stderr, /use config\.schema for a custom schema/i);
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
+test('server startup fails when both schema and schema_profile are set', async () => {
+  const cwd = await mkdtemp(path.join(os.tmpdir(), 'ab-schema-and-profile-'));
+  const configPath = path.join(cwd, 'server-config.json');
+  try {
+    await writeFile(
+      configPath,
+      JSON.stringify({
+        schema_profile: 'agent_insights_v1',
+        schema: {
+          task_id: { type: 'string' },
+        },
+      }),
+      'utf8',
+    );
+
+    const stderr = await runServerExpectStartupFailure({
+      cwd,
+      args: ['--config', configPath],
+    });
+
+    assert.match(stderr, /cannot set both config\.schema and config\.schema_profile/i);
+    assert.match(stderr, /choose one schema source/i);
   } finally {
     await rm(cwd, { recursive: true, force: true });
   }

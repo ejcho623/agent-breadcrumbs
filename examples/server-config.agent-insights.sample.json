@@ -1,0 +1,9 @@
+{
+  "schema_profile": "agent_insights_v1",
+  "sink": {
+    "name": "jsonl",
+    "config": {
+      "log_file": "/tmp/agent-breadcrumbs/agent-insights.logs.jsonl"
+    }
+  }
+}

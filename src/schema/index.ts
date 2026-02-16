@@ -1,6 +1,7 @@
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 
-import type { LogRecordProperties, PropertySchema, SchemaSource } from "../types.js";
+import type { LogRecordProperties, PropertySchema, SchemaProfileName, SchemaSource } from "../types.js";
+import { SCHEMA_PROFILES, isSchemaProfileName, listSchemaProfiles } from "./profiles.js";
 
 export const DEFAULT_LOG_RECORD_PROPERTIES: LogRecordProperties = {
   agent_id: { type: "string" },
@@ -33,6 +34,30 @@ export function resolveLogRecordProperties(rawSchema?: unknown): {
   }
 
   return { schemaSource: "custom", properties: normalized };
+}
+
+export function resolveLogRecordPropertiesFromProfile(rawSchemaProfile: unknown): {
+  schemaSource: SchemaSource;
+  schemaProfileName: SchemaProfileName;
+  properties: LogRecordProperties;
+} {
+  if (typeof rawSchemaProfile !== "string" || rawSchemaProfile.trim() === "") {
+    throw new Error("config.schema_profile must be a non-empty string");
+  }
+
+  if (!isSchemaProfileName(rawSchemaProfile)) {
+    const supported = listSchemaProfiles().join(", ");
+    throw new Error(
+      `Unknown config.schema_profile: ${rawSchemaProfile}. Supported profiles: ${supported}. ` +
+        "Use config.schema for a custom schema.",
+    );
+  }
+
+  return {
+    schemaSource: "profile",
+    schemaProfileName: rawSchemaProfile,
+    properties: SCHEMA_PROFILES[rawSchemaProfile],
+  };
 }
 
 export function buildInputSchema(logRecordProperties: LogRecordProperties): Tool["inputSchema"] {

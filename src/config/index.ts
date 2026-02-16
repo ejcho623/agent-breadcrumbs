@@ -3,9 +3,9 @@ import os from "node:os";
 import path from "node:path";
 
 import { DEFAULT_SERVER_CONFIG } from "./defaults.js";
-import { resolveLogRecordProperties } from "../schema/index.js";
+import { resolveLogRecordProperties, resolveLogRecordPropertiesFromProfile } from "../schema/index.js";
 import { resolveSinkConfig } from "../sinks/index.js";
-import type { LogRecordProperties, SchemaSource, SinkConfig } from "../types.js";
+import type { LogRecordProperties, SchemaProfileName, SchemaSource, SinkConfig } from "../types.js";
 
 const LEGACY_RUNTIME_FLAGS = new Set(["--properties-file", "--sink", "--log-file"]);
 
@@ -15,6 +15,7 @@ export interface CliConfig {
 
 export interface RuntimeConfig {
   schemaSource: SchemaSource;
+  schemaProfileName?: SchemaProfileName;
   logRecordProperties: LogRecordProperties;
   sink: SinkConfig;
 }
@@ -52,12 +53,13 @@ export function parseCliArgs(argv: string[]): CliConfig {
 export function resolveRuntimeConfig(cliConfig: CliConfig): RuntimeConfig {
   const { rawConfig, baseDir } = loadRawConfig(cliConfig.configFile);
 
-  const { schemaSource, properties } = resolveLogRecordProperties(rawConfig.schema ?? DEFAULT_SERVER_CONFIG.schema);
+  const schemaResolution = resolveSchemaConfig(rawConfig);
   const sink = resolveSinkConfig(rawConfig.sink, baseDir, DEFAULT_SERVER_CONFIG.sink.config.log_file);
 
   return {
-    schemaSource,
-    logRecordProperties: properties,
+    schemaSource: schemaResolution.schemaSource,
+    schemaProfileName: schemaResolution.schemaProfileName,
+    logRecordProperties: schemaResolution.properties,
     sink,
   };
 }
@@ -109,4 +111,26 @@ function resolvePath(value: string): string {
     return path.resolve(os.homedir(), value.slice(1));
   }
   return path.isAbsolute(value) ? value : path.resolve(process.cwd(), value);
+}
+
+function resolveSchemaConfig(rawConfig: Record<string, unknown>): {
+  schemaSource: SchemaSource;
+  schemaProfileName?: SchemaProfileName;
+  properties: LogRecordProperties;
+} {
+  const hasSchema = rawConfig.schema !== undefined;
+  const hasSchemaProfile = rawConfig.schema_profile !== undefined;
+
+  if (hasSchema && hasSchemaProfile) {
+    throw new Error(
+      "Config cannot set both config.schema and config.schema_profile. " +
+        "Choose one schema source; use config.schema for fully custom fields.",
+    );
+  }
+
+  if (hasSchemaProfile) {
+    return resolveLogRecordPropertiesFromProfile(rawConfig.schema_profile);
+  }
+
+  return resolveLogRecordProperties(rawConfig.schema ?? DEFAULT_SERVER_CONFIG.schema);
 }

@@ -96,6 +96,36 @@ Also available as files:
 - `/Users/ejcho/Documents/projects/agent-breadcrumbs/examples/server-config.webhook.sample.json`
 - `/Users/ejcho/Documents/projects/agent-breadcrumbs/examples/server-config.postgres.sample.json`
 
+Schema-profile config examples:
+- `/Users/ejcho/Documents/projects/agent-breadcrumbs/examples/server-config.agent-insights.sample.json`
+- `/Users/ejcho/Documents/projects/agent-breadcrumbs/examples/server-config.delivery-tracking.sample.json`
+- `/Users/ejcho/Documents/projects/agent-breadcrumbs/examples/server-config.audit-trail.sample.json`
+- `/Users/ejcho/Documents/projects/agent-breadcrumbs/examples/server-config.knowledge-capture.sample.json`
+
+Built-in schema profiles:
+- `agent_insights_v1`
+- `delivery_tracking_v1`
+- `audit_trail_v1`
+- `knowledge_capture_v1`
+
+Use a profile via config:
+```json
+{
+  "schema_profile": "agent_insights_v1",
+  "sink": {
+    "name": "jsonl",
+    "config": {
+      "log_file": "/tmp/agent-breadcrumbs/logs.jsonl"
+    }
+  }
+}
+```
+
+Custom schema migration guidance:
+- Keep using `config.schema` for fully custom fields.
+- Or switch to `config.schema_profile` for an out-of-box use-case schema.
+- Do not set both `config.schema` and `config.schema_profile` in the same config.
+
 Postgres table bootstrap (recommended):
 ```sql
 CREATE TABLE public.agent_logs (

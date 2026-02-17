@@ -10,7 +10,7 @@ Create a server config file and reference it from client startup args:
   "sink": {
     "name": "jsonl",
     "config": {
-      "log_file": "/Users/ejcho/.agent-breadcrumbs/logs.jsonl"
+      "log_file": "~/.agent-breadcrumbs/logs.jsonl"
     }
   }
 }
@@ -19,25 +19,25 @@ Create a server config file and reference it from client startup args:
 ## 1) Codex
 Add server via CLI:
 ```bash
-codex mcp add agent-breadcrumbs -- node /Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js --config /Users/ejcho/.agent-breadcrumbs/server-config.json
+codex mcp add agent-breadcrumbs -- node /path/to/repo/packages/mcp/dist/index.js --config ~/.agent-breadcrumbs/server-config.json
 ```
 
 Or via config (`~/.codex/config.toml`):
 ```toml
 [mcp_servers.agent_breadcrumbs]
 command = "node"
-args = ["/Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js", "--config", "/Users/ejcho/.agent-breadcrumbs/server-config.json"]
+args = ["/path/to/repo/packages/mcp/dist/index.js", "--config", "~/.agent-breadcrumbs/server-config.json"]
 ```
 
 ## 2) Claude Code
 Add server via CLI:
 ```bash
-claude mcp add agent-breadcrumbs node /Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js --config /Users/ejcho/.agent-breadcrumbs/server-config.json
+claude mcp add agent-breadcrumbs node /path/to/repo/packages/mcp/dist/index.js --config ~/.agent-breadcrumbs/server-config.json
 ```
 
 Project-scoped JSON alternative:
 ```bash
-claude mcp add-json agent-breadcrumbs '{"type":"stdio","command":"node","args":["/Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js","--config","/Users/ejcho/.agent-breadcrumbs/server-config.json"]}'
+claude mcp add-json agent-breadcrumbs '{"type":"stdio","command":"node","args":["/path/to/repo/packages/mcp/dist/index.js","--config","~/.agent-breadcrumbs/server-config.json"]}'
 ```
 
 ## 3) Cursor
@@ -48,9 +48,9 @@ Project config (`.cursor/mcp.json`) or global (`~/.cursor/mcp.json`):
     "agent-breadcrumbs": {
       "command": "node",
       "args": [
-        "/Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js",
+        "/path/to/repo/packages/mcp/dist/index.js",
         "--config",
-        "/Users/ejcho/.agent-breadcrumbs/server-config.json"
+        "~/.agent-breadcrumbs/server-config.json"
       ]
     }
   }
@@ -65,9 +65,9 @@ In Claude Desktop: Settings -> Developer -> Edit Config, then add:
     "agent-breadcrumbs": {
       "command": "node",
       "args": [
-        "/Users/ejcho/Documents/projects/agent-breadcrumbs/dist/index.js",
+        "/path/to/repo/packages/mcp/dist/index.js",
         "--config",
-        "/Users/ejcho/.agent-breadcrumbs/server-config.json"
+        "~/.agent-breadcrumbs/server-config.json"
       ]
     }
   }

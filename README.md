@@ -1,231 +1,120 @@
-# Agent Breadcrumbs MCP Server
+# Agent Breadcrumbs
 
-Minimal MCP server for logging agent work with low response overhead.
+Lightweight observability for agent work across clients (Codex, Claude, Cursor, ChatGPT, OpenClaw, and others).
 
-## What the current build includes
-- One tool: `log_work`
-- Active schema from default `log_record` fields or inline `config.schema`
-- Config-first runtime via `--config <path>`
-- Tool input validation against active schema
-- Local JSONL persistence for quick testing (`jsonl` sink)
-- Generic read-only dashboard app (`apps/dashboard`)
-- Minimal success ack: `{ "ok": true, "log_id": "..." }`
+## Core Value
 
-Current sink status:
-- Implemented: `jsonl`, `webhook`, `postgres`
+- One MCP tool (`log_work`) that works across different agent clients.
+- Define your own logging structure with custom schemas (or use built-in profiles).
+- Config-driven output sinks:
+  - local JSONL
+  - webhook
+  - Postgres
+- Reusable schema profiles for common use cases:
+  - agent insights
+  - delivery tracking
+  - audit trail
+  - knowledge capture
 
-## Requirements
-- Node.js 18+
+This lets teams standardize logging once, then route data wherever they need it.
 
-## Install
+## Why Config-First Matters
+
+- Your schema/profile is applied directly to the MCP tool input schema.
+- Agent clients see the required `log_record` fields from the tool definition.
+- You do not need to repeatedly explain payload format for every tool call in client.
+
+## Repository Layout
+
+- MCP server package (published): `packages/mcp`
+- Dashboard app (repo-local, not published): `apps/dashboard`
+
+## Quick Start (Repo)
+
 ```bash
 npm install
+npm run build:all
 ```
 
-## Build
+Run MCP server locally with a sample config:
+
 ```bash
-npm run build
+node packages/mcp/dist/index.js --config packages/mcp/examples/server-config.agent-insights.sample.json
 ```
 
-Build targets:
-- MCP server: `npm run build:server`
-- Dashboard app: `npm run build:dashboard`
+Run dashboard locally:
 
-## Run
-MCP server default runtime config (no args):
 ```bash
-npm run start:server
+npm run dev:dashboard -- --config apps/dashboard/examples/dashboard-config.sample.json
 ```
 
-MCP server with config file:
-```bash
-npm run start:server -- --config ./examples/server-config.sample.json
+## MCP Config Model
+
+Top-level config file is JSON and supports:
+
+- `schema` for fully custom `log_record` properties, or
+- `schema_profile` for built-in profile files in `packages/mcp/examples/schema_profiles`
+- `sink` for destination settings (`jsonl`, `webhook`, `postgres`)
+
+Do not set both `schema` and `schema_profile` together.
+
+Default behavior when omitted:
+
+- schema: built-in default (`agent_id`, `timestamp`, `work_summary`, `additional`)
+- sink: `jsonl`
+- output file: `~/.agent-breadcrumbs/logs.jsonl`
+
+## Client Setup Examples
+
+Codex (`~/.codex/config.toml`):
+
+```toml
+[mcp_servers.agent_breadcrumbs]
+command = "npx"
+args = ["-y", "agent-breadcrumbs", "--config", "/absolute/path/to/server-config.json"]
 ```
 
-Dashboard (Postgres source):
-```bash
-npm run start:dashboard -- --config ./apps/dashboard/examples/dashboard-config.postgres.sample.json
+`--config` is optional. If omitted, server defaults are used:
+
+```toml
+[mcp_servers.agent_breadcrumbs]
+command = "npx"
+args = ["-y", "agent-breadcrumbs"]
 ```
 
-Dashboard (JSONL source):
-```bash
-npm run start:dashboard -- --config ./apps/dashboard/examples/dashboard-config.sample.json
-```
+Claude Desktop (`claude_desktop_config.json`):
 
-Dashboard with no config file defaults to:
-- host: `127.0.0.1`
-- port: `4319`
-- log store: `jsonl` at `~/.agent-breadcrumbs/logs.jsonl`
-
-Dashboard config examples:
-- `/Users/ejcho/Documents/projects/agent-breadcrumbs/apps/dashboard/examples/dashboard-config.sample.json`
-- `/Users/ejcho/Documents/projects/agent-breadcrumbs/apps/dashboard/examples/dashboard-config.postgres.sample.json`
-
-`jsonl` sample config:
 ```json
 {
-  "schema": {
-    "task_id": { "type": "string" },
-    "hours_spent": { "type": "number" }
-  },
-  "sink": {
-    "name": "jsonl",
-    "config": {
-      "log_file": "/tmp/agent-breadcrumbs/logs.jsonl"
+  "mcpServers": {
+    "agent-breadcrumbs": {
+      "command": "npx",
+      "args": ["-y", "agent-breadcrumbs", "--config", "/absolute/path/to/server-config.json"]
     }
   }
 }
 ```
 
-`webhook` sample config:
-```json
-{
-  "sink": {
-    "name": "webhook",
-    "config": {
-      "url": "https://example.com/ingest",
-      "headers": {
-        "authorization": "Bearer <token>"
-      },
-      "timeout_ms": 3000,
-      "retry": {
-        "max_attempts": 2,
-        "backoff_ms": 250
-      }
-    }
-  }
-}
+Example global instruction/system prompt for clients:
+
+```text
+When a meaningful chunk of work is completed, call log_work exactly once with
+log_record matching the configured tool schema.
 ```
 
-`postgres` sample config:
-```json
-{
-  "sink": {
-    "name": "postgres",
-    "config": {
-      "connection_string": "postgres://user:password@localhost:5432/agent_breadcrumbs",
-      "table": "public.agent_logs",
-      "timeout_ms": 5000,
-      "retry": {
-        "max_attempts": 1,
-        "backoff_ms": 250
-      }
-    }
-  }
-}
-```
+## Common Commands
 
-Also available as files:
-- `/Users/ejcho/Documents/projects/agent-breadcrumbs/examples/server-config.sample.json`
-- `/Users/ejcho/Documents/projects/agent-breadcrumbs/examples/server-config.webhook.sample.json`
-- `/Users/ejcho/Documents/projects/agent-breadcrumbs/examples/server-config.postgres.sample.json`
-
-Schema-profile config examples:
-- `/Users/ejcho/Documents/projects/agent-breadcrumbs/examples/server-config.agent-insights.sample.json`
-- `/Users/ejcho/Documents/projects/agent-breadcrumbs/examples/server-config.delivery-tracking.sample.json`
-- `/Users/ejcho/Documents/projects/agent-breadcrumbs/examples/server-config.audit-trail.sample.json`
-- `/Users/ejcho/Documents/projects/agent-breadcrumbs/examples/server-config.knowledge-capture.sample.json`
-
-Schema profiles are loaded from JSON files in:
-- `/Users/ejcho/Documents/projects/agent-breadcrumbs/examples/schema_profiles`
-
-Current profile files include:
-- `agent_insights_v1.json`
-- `delivery_tracking_v1.json`
-- `audit_trail_v1.json`
-- `knowledge_capture_v1.json`
-- `default_v1.json`
-
-Default schema reference (used when neither `schema` nor `schema_profile` is set):
-- `/Users/ejcho/Documents/projects/agent-breadcrumbs/examples/schema_profiles/default_v1.json`
-
-Use a profile via config:
-```json
-{
-  "schema_profile": "agent_insights_v1",
-  "sink": {
-    "name": "jsonl",
-    "config": {
-      "log_file": "/tmp/agent-breadcrumbs/logs.jsonl"
-    }
-  }
-}
-```
-
-Custom schema migration guidance:
-- Keep using `config.schema` for fully custom fields.
-- Or switch to `config.schema_profile` for an out-of-box use-case schema.
-- Do not set both `config.schema` and `config.schema_profile` in the same config.
-
-Postgres table bootstrap (recommended):
-```sql
-CREATE TABLE public.agent_logs (
-  log_id TEXT PRIMARY KEY,
-  server_timestamp TIMESTAMPTZ NOT NULL,
-  log_record JSONB NOT NULL
-);
-```
-
-## Tool shape
-`log_work` input schema is built as:
-- top-level `log_record` (persisted fields)
-- required: `log_record`
-
-Default `log_record` properties:
-```json
-{
-  "agent_id": { "type": "string" },
-  "timestamp": { "type": "string", "format": "date-time" },
-  "work_summary": { "type": "string" },
-  "additional": { "type": "object" }
-}
-```
-
-## Persistence behavior
-Default sink:
-- `jsonl`
-
-Default output file:
-- `~/.agent-breadcrumbs/logs.jsonl`
-
-Persisted entries include:
-- `log_id`
-- `server_timestamp`
-- `log_record`
-
-Override location via:
-- config file: `sink.config.log_file`
-
-## Guardrails (implementation-level)
-Current hard caps:
-- Max request payload bytes: `32768`
-- Max `log_record` serialized bytes: `16384`
-- Max `log_record` depth: `8`
-- Max `log_record` keys: `256`
-
-Over-limit payloads are rejected before write.
-
-## Test
 ```bash
-npm test
+npm run build:mcp
+npm run dev:mcp
+npm run test
 npm run test:integration
+npm run build:dashboard
+npm run dev:dashboard
 ```
 
-`npm run test:integration` notes:
-- Postgres success + timeout integration cases run only when `POSTGRES_TEST_URL` is set.
-- The unreachable-Postgres case runs without `POSTGRES_TEST_URL`.
+## Docs
 
-Example:
-```bash
-export POSTGRES_TEST_URL="postgres://user:password@localhost:5432/agent_breadcrumbs"
-npm run test:integration
-```
-
-## Client setup and validation matrix
-See `/Users/ejcho/Documents/projects/agent-breadcrumbs/CLIENT_SETUP_AND_VALIDATION.md`.
-
-## Milestone status
-See `/Users/ejcho/Documents/projects/agent-breadcrumbs/IMPLEMENTATION_TASK_V2.md`.
-
-## Next roadmap
-See `/Users/ejcho/Documents/projects/agent-breadcrumbs/IMPLEMENTATION_TASK_V3_AGENT_INSIGHTS.md`.
+- MCP package docs: `packages/mcp/README.md`
+- Dashboard app docs: `apps/dashboard/README.md`
+- Client setup snippets: `CLIENT_SETUP_AND_VALIDATION.md`

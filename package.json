@@ -1,44 +1,21 @@
 {
-  "name": "agent-breadcrumbs",
-  "version": "0.1.0",
-  "description": "MCP server for lightweight agent work logging",
-  "main": "dist/index.js",
-  "bin": {
-    "agent-breadcrumbs-mcp-server": "dist/index.js"
-  },
-  "scripts": {
-    "build": "npm run build:server && npm run build:dashboard",
-    "build:server": "tsc -p tsconfig.json",
-    "build:dashboard": "tsc -p apps/dashboard/tsconfig.json",
-    "dev": "npm run dev:server",
-    "dev:server": "tsx src/index.ts",
-    "dev:dashboard": "tsx apps/dashboard/src/index.ts",
-    "start": "npm run start:server",
-    "start:server": "node dist/index.js",
-    "start:dashboard": "node apps/dashboard/dist/index.js",
-    "test": "npm run build && node --test test/*.test.mjs",
-    "test:integration": "npm run build && node --test test/integration/*.test.mjs"
-  },
-  "keywords": [
-    "mcp",
-    "agent",
-    "observability",
-    "logging"
+  "name": "agent-breadcrumbs-repo",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
   ],
-  "author": "",
-  "license": "MIT",
-  "type": "module",
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.26.0",
-    "@types/pg": "^8.16.0",
-    "ajv": "^8.17.1",
-    "ajv-formats": "^3.0.1",
-    "pg": "^8.18.0",
-    "zod": "^4.3.6"
-  },
-  "devDependencies": {
-    "@types/node": "^25.2.3",
-    "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+  "scripts": {
+    "build": "npm run build:mcp",
+    "build:all": "npm run build:mcp && npm run build:dashboard",
+    "build:mcp": "npm --workspace packages/mcp run build",
+    "build:dashboard": "npm --workspace apps/dashboard run build",
+    "dev:mcp": "npm --workspace packages/mcp run dev",
+    "dev:dashboard": "npm --workspace apps/dashboard run dev",
+    "start:mcp": "npm --workspace packages/mcp run start",
+    "start:dashboard": "npm --workspace apps/dashboard run start",
+    "test": "npm --workspace packages/mcp run test",
+    "test:integration": "npm --workspace packages/mcp run test:integration",
+    "pack:dry-run:mcp": "npm --workspace packages/mcp run pack:dry-run"
   }
 }

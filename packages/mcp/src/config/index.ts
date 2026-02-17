@@ -66,7 +66,7 @@ export function resolveRuntimeConfig(cliConfig: CliConfig): RuntimeConfig {
 
 export function printHelpAndExit(exitCode: number): never {
   const lines = [
-    "Usage: agent-breadcrumbs-mcp-server [options]",
+    "Usage: agent-breadcrumbs [options]",
     "",
     "Options:",
     "  --config <path>                JSON config file for schema + sink settings",

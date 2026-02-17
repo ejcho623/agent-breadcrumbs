@@ -1,7 +1,7 @@
 node_modules/
-dist/
+packages/mcp/dist/
 apps/dashboard/dist/
 data/
 .DS_Store
-examples/*.local.json
+packages/mcp/examples/*.local.json
 apps/dashboard/examples/*.local.json

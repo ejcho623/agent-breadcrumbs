@@ -37,7 +37,7 @@ export function renderDashboardHtml(): string {
       @media (max-width: 900px) {
         .timeseries, .status { grid-column: 1 / -1; }
       }
-      form { display: grid; gap: 10px; grid-template-columns: repeat(6, minmax(120px, 1fr)); }
+      form { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
       @media (max-width: 900px) {
         form { grid-template-columns: repeat(2, minmax(140px, 1fr)); }
       }
@@ -49,6 +49,9 @@ export function renderDashboardHtml(): string {
         border-radius: 7px;
         background: white;
       }
+      input, select { width: 100%; min-width: 0; }
+      input[type="datetime-local"] { padding-right: 28px; }
+      input[type="datetime-local"]::-webkit-calendar-picker-indicator { margin: 0; }
       button { cursor: pointer; border-color: var(--accent); background: var(--accent); color: white; }
       .bar-list { display: grid; gap: 8px; }
       .bar-row { display: grid; grid-template-columns: 180px 1fr 64px; align-items: center; gap: 8px; font-size: 0.9rem; }
@@ -108,13 +111,7 @@ export function renderDashboardHtml(): string {
           <div id="count" class="pill">0 events</div>
           <table>
             <thead>
-              <tr>
-                <th>Time</th>
-                <th>Actor</th>
-                <th>Status</th>
-                <th>Summary</th>
-                <th>Payload</th>
-              </tr>
+              <tr id="eventsHeadRow"></tr>
             </thead>
             <tbody id="eventsTable"></tbody>
           </table>
@@ -126,10 +123,22 @@ export function renderDashboardHtml(): string {
       const filtersForm = document.getElementById("filters");
       const actorSelect = filtersForm.elements.actor;
       const statusSelect = filtersForm.elements.status;
+      const eventsHeadRow = document.getElementById("eventsHeadRow");
       const eventsTable = document.getElementById("eventsTable");
       const countBadge = document.getElementById("count");
       const timeseriesRoot = document.getElementById("timeseries");
       const statusRoot = document.getElementById("statusBreakdown");
+      const BASE_HEADERS = ["Time", "Actor", "Status", "Summary"];
+      const EXCLUDED_DYNAMIC_KEYS = new Set([
+        "agent_id",
+        "actor_id",
+        "timestamp",
+        "status",
+        "work_summary",
+        "summary",
+        "additional",
+      ]);
+      const MAX_DYNAMIC_COLUMNS = 4;
 
       function paramsFromForm() {
         const formData = new FormData(filtersForm);
@@ -176,21 +185,80 @@ export function renderDashboardHtml(): string {
       }
 
       function renderEvents(items) {
+        const dynamicColumns = inferDynamicColumns(items);
+        renderEventsHeader(dynamicColumns);
+
         countBadge.textContent = String(items.length) + " events";
         if (items.length === 0) {
-          eventsTable.innerHTML = '<tr><td class="empty" colspan="5">No matching events</td></tr>';
+          const colspan = BASE_HEADERS.length + dynamicColumns.length + 1;
+          eventsTable.innerHTML = '<tr><td class="empty" colspan="' + colspan + '">No matching events</td></tr>';
           return;
         }
 
         eventsTable.innerHTML = items.map((item) => {
+          const dynamicCells = dynamicColumns.map((key) => {
+            const value = item.payload[key];
+            return '<td>' + escapeHtml(renderScalarValue(value)) + '</td>';
+          }).join("");
+
           return '<tr>' +
             '<td>' + new Date(item.eventTime).toLocaleString() + '</td>' +
             '<td>' + escapeHtml(item.actor || '-') + '</td>' +
             '<td>' + escapeHtml(item.status || '-') + '</td>' +
             '<td>' + escapeHtml(item.summary || '-') + '</td>' +
+            dynamicCells +
             '<td><pre>' + escapeHtml(JSON.stringify(item.payload, null, 2)) + '</pre></td>' +
           '</tr>';
         }).join("");
+      }
+
+      function inferDynamicColumns(items) {
+        const counts = new Map();
+
+        for (const item of items) {
+          const payload = item.payload || {};
+          for (const key of Object.keys(payload)) {
+            if (EXCLUDED_DYNAMIC_KEYS.has(key)) {
+              continue;
+            }
+
+            const value = payload[key];
+            if (!isDisplayScalar(value)) {
+              continue;
+            }
+
+            counts.set(key, (counts.get(key) || 0) + 1);
+          }
+        }
+
+        return Array.from(counts.entries())
+          .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+          .slice(0, MAX_DYNAMIC_COLUMNS)
+          .map((entry) => entry[0]);
+      }
+
+      function renderEventsHeader(dynamicColumns) {
+        const headers = BASE_HEADERS
+          .concat(dynamicColumns)
+          .concat(["Payload"]);
+        eventsHeadRow.innerHTML = headers.map((label) => '<th>' + escapeHtml(label) + '</th>').join("");
+      }
+
+      function isDisplayScalar(value) {
+        if (typeof value === "string") {
+          return value.trim() !== "";
+        }
+        return typeof value === "number" || typeof value === "boolean";
+      }
+
+      function renderScalarValue(value) {
+        if (value === undefined || value === null) {
+          return "-";
+        }
+        if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+          return String(value);
+        }
+        return "-";
       }
 
       function updateSelect(select, entries) {

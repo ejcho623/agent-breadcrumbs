@@ -3,7 +3,7 @@ import path from "node:path";
 
 export const TOOL_NAME = "log_work";
 export const SERVER_NAME = "agent-breadcrumbs";
-export const SERVER_VERSION = "0.1.0";
+export const SERVER_VERSION = "0.1.1";
 
 export const DEFAULT_LOG_FILE_PATH = path.join(os.homedir(), ".agent-breadcrumbs", "logs.jsonl");
 

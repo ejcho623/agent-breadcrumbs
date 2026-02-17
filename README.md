@@ -1,8 +1,8 @@
-# Agent Breadcrumbs
+# Agent Breadcrumbs 🍞
 
 Lightweight observability for agent work across clients (Codex, Claude, Cursor, ChatGPT, OpenClaw, and others).
 
-## Core Value
+## What You Get
 
 - One MCP tool (`log_work`) that works across different agent clients.
 - Define your own logging structure with custom schemas (or use built-in profiles).
@@ -17,12 +17,6 @@ Lightweight observability for agent work across clients (Codex, Claude, Cursor, 
   - knowledge capture
 
 This lets teams standardize logging once, then route data wherever they need it.
-
-## Why Config-First Matters
-
-- Your schema/profile is applied directly to the MCP tool input schema.
-- Agent clients see the required `log_record` fields from the tool definition.
-- You do not need to repeatedly explain payload format for every tool call in client.
 
 ## Repository Layout
 
@@ -64,6 +58,12 @@ Default behavior when omitted:
 - sink: `jsonl`
 - output file: `~/.agent-breadcrumbs/logs.jsonl`
 
+## Why Config
+
+- Your schema/profile is applied directly to the MCP tool input schema.
+- Agent clients see the required `log_record` fields from the tool definition.
+- You do not need to repeatedly explain payload format for every tool call in client.
+
 ## Client Setup Examples
 
 Codex (`~/.codex/config.toml`):
@@ -101,6 +101,9 @@ Example global instruction/system prompt for clients:
 When a meaningful chunk of work is completed, call log_work exactly once with
 log_record matching the configured tool schema.
 ```
+
+For full MCP server setup, config, and sink details, see `packages/mcp/README.md`.
+
 
 ## Common Commands
 

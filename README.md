@@ -1,6 +1,6 @@
 # Agent Breadcrumbs 🍞
 
-Lightweight observability for agent work across clients (Codex, Claude, Cursor, ChatGPT, OpenClaw, and others).
+Lightweight logging & observability for agent work across clients (Codex, Claude, Cursor, ChatGPT, OpenClaw, and others).
 
 ## What You Get
 
@@ -22,6 +22,58 @@ This lets teams standardize logging once, then route data wherever they need it.
 
 - MCP server package (published): `packages/mcp`
 - Dashboard app (repo-local, not published): `apps/dashboard`
+
+## Quick Start (MCP)
+
+Install and run with defaults:
+
+```bash
+npx -y agent-breadcrumbs
+```
+
+Use with an explicit config file:
+
+```bash
+npx -y agent-breadcrumbs --config /absolute/path/to/server-config.json
+```
+
+Codex config example (`~/.codex/config.toml`):
+
+```toml
+[mcp_servers.agent_breadcrumbs]
+command = "npx"
+args = ["-y", "agent-breadcrumbs", "--config", "/absolute/path/to/server-config.json"]
+```
+
+`--config` is optional. If omitted, server defaults are used:
+
+```toml
+[mcp_servers.agent_breadcrumbs]
+command = "npx"
+args = ["-y", "agent-breadcrumbs"]
+```
+
+Claude Desktop (`claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "agent-breadcrumbs": {
+      "command": "npx",
+      "args": ["-y", "agent-breadcrumbs", "--config", "/absolute/path/to/server-config.json"]
+    }
+  }
+}
+```
+
+Example global instruction/system prompt for clients:
+
+```text
+When a meaningful chunk of work is completed, call log_work exactly once with
+log_record matching the configured tool schema.
+```
+
+For full MCP server setup, config, and sink details, see `packages/mcp/README.md`.
 
 ## Quick Start (Repo)
 
@@ -64,47 +116,6 @@ Default behavior when omitted:
 - Agent clients see the required `log_record` fields from the tool definition.
 - You do not need to repeatedly explain payload format for every tool call in client.
 
-## Client Setup Examples
-
-Codex (`~/.codex/config.toml`):
-
-```toml
-[mcp_servers.agent_breadcrumbs]
-command = "npx"
-args = ["-y", "agent-breadcrumbs", "--config", "/absolute/path/to/server-config.json"]
-```
-
-`--config` is optional. If omitted, server defaults are used:
-
-```toml
-[mcp_servers.agent_breadcrumbs]
-command = "npx"
-args = ["-y", "agent-breadcrumbs"]
-```
-
-Claude Desktop (`claude_desktop_config.json`):
-
-```json
-{
-  "mcpServers": {
-    "agent-breadcrumbs": {
-      "command": "npx",
-      "args": ["-y", "agent-breadcrumbs", "--config", "/absolute/path/to/server-config.json"]
-    }
-  }
-}
-```
-
-Example global instruction/system prompt for clients:
-
-```text
-When a meaningful chunk of work is completed, call log_work exactly once with
-log_record matching the configured tool schema.
-```
-
-For full MCP server setup, config, and sink details, see `packages/mcp/README.md`.
-
-
 ## Common Commands
 
 ```bash
@@ -120,4 +131,3 @@ npm run dev:dashboard
 
 - MCP package docs: `packages/mcp/README.md`
 - Dashboard app docs: `apps/dashboard/README.md`
-- Client setup snippets: `CLIENT_SETUP_AND_VALIDATION.md`

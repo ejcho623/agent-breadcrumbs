@@ -22,6 +22,7 @@ export interface RuntimeConfig {
 
 export function parseCliArgs(argv: string[]): CliConfig {
   let configFile: string | undefined;
+  const invocationCwd = process.env.INIT_CWD ?? process.cwd();
 
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
@@ -31,7 +32,7 @@ export function parseCliArgs(argv: string[]): CliConfig {
       if (!next) {
         throw new Error("Missing value for --config");
       }
-      configFile = resolvePath(next);
+      configFile = resolvePath(next, invocationCwd);
       i += 1;
       continue;
     }
@@ -106,7 +107,7 @@ function loadRawConfig(configFile?: string): { rawConfig: Record<string, unknown
   return { rawConfig: parsed as Record<string, unknown>, baseDir: path.dirname(configFile) };
 }
 
-function resolvePath(value: string): string {
+function resolvePath(value: string, baseDir: string): string {
   if (value === "~") {
     return os.homedir();
   }
@@ -115,7 +116,7 @@ function resolvePath(value: string): string {
     return path.resolve(os.homedir(), value.slice(2));
   }
 
-  return path.isAbsolute(value) ? value : path.resolve(process.cwd(), value);
+  return path.isAbsolute(value) ? value : path.resolve(baseDir, value);
 }
 
 function resolveSchemaConfig(rawConfig: Record<string, unknown>): {

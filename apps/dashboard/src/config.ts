@@ -36,6 +36,7 @@ export interface DashboardConfig {
 
 export function parseDashboardCliArgs(argv: string[]): DashboardCliConfig {
   let configFile: string | undefined;
+  const invocationCwd = process.env.INIT_CWD ?? process.cwd();
 
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
@@ -45,7 +46,7 @@ export function parseDashboardCliArgs(argv: string[]): DashboardCliConfig {
       if (!next) {
         throw new Error("Missing value for --config");
       }
-      configFile = resolvePath(next, process.cwd());
+      configFile = resolvePath(next, invocationCwd);
       i += 1;
       continue;
     }

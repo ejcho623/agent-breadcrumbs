@@ -4,19 +4,20 @@ Lightweight logging & observability for agent work across clients (Codex, Claude
 
 ## What You Get
 
-- One MCP tool (`log_work`) that works across different agent clients.
-- Define your own logging structure with custom schemas (or use built-in profiles).
-- Config-driven output sinks:
+- One MCP tool (`log_work`) that aggregates work done across different agents for single or multiple users.
+- Define your own logging structure with custom schemas (or use built-in profiles) once, and the MCP schema 
+will guide clients to log with correct payloads. 
+- This lets teams standardize logging once, then route data wherever they need it.
+- Multiple options for output sinks:
   - local JSONL
   - webhook
   - Postgres
-- Reusable schema profiles for common use cases:
+- Starter schema profiles for common use cases:
   - agent insights
   - delivery tracking
   - audit trail
   - knowledge capture
-
-This lets teams standardize logging once, then route data wherever they need it.
+- Simple dashboard app to view logged work.
 
 ## Repository Layout
 

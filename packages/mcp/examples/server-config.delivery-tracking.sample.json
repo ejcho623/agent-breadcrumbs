@@ -3,7 +3,7 @@
   "sink": {
     "name": "jsonl",
     "config": {
-      "log_file": "/tmp/agent-breadcrumbs/delivery-tracking.logs.jsonl"
+      "log_file": "~/.agent-breadcrumbs/logs.jsonl"
     }
   }
 }

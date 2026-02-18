@@ -40,8 +40,7 @@ Use with an explicit config file:
 npx -y agent-breadcrumbs --config /absolute/path/to/server-config.json
 ```
 
-Codex config example (`~/.codex/config.toml`):
-
+### Codex config example (`~/.codex/config.toml`):
 ```toml
 [mcp_servers.agent_breadcrumbs]
 command = "npx"
@@ -50,14 +49,10 @@ args = ["-y", "agent-breadcrumbs", "--config", "/absolute/path/to/server-config.
 
 `--config` is optional. If omitted, server defaults are used:
 
-```toml
-[mcp_servers.agent_breadcrumbs]
-command = "npx"
-args = ["-y", "agent-breadcrumbs"]
-```
+<img width="1171" height="491" alt="Screenshot 2026-02-18 at 11 20 21 AM" src="https://github.com/user-attachments/assets/0340fa51-8ad0-4533-80df-e3b10166b0c6" />
+<img width="1170" height="561" alt="Screenshot 2026-02-18 at 11 20 26 AM" src="https://github.com/user-attachments/assets/b5a8823b-68a1-4284-a4ed-2de9010efb1f" />
 
-Claude Desktop (`claude_desktop_config.json`):
-
+### Claude Desktop (`claude_desktop_config.json`):
 ```json
 {
   "mcpServers": {
@@ -69,14 +64,27 @@ Claude Desktop (`claude_desktop_config.json`):
 }
 ```
 
-Example global instruction/system prompt for clients:
+<img width="1267" height="878" alt="Screenshot 2026-02-18 at 11 21 15 AM" src="https://github.com/user-attachments/assets/faa646f3-843a-4501-8d60-266e7f69b838" /><img width="1267" height="878" alt="Screenshot 2026-02-18 at 11 21 21 AM" src="https://github.com/user-attachments/assets/2e690d3c-4d9b-4370-a14d-2b8c5d95c33b" />
+
+### OpenClaw:
+After you install the MCP server make sure to use mcporter so the server can be called through the CLI. 
+Then add a system prompt to the channel you're using.
+
+<img width="810" height="473" alt="Screenshot 2026-02-18 at 11 23 58 AM" src="https://github.com/user-attachments/assets/9fc7095d-9582-423f-822c-8e6926d458fb" />
+
+For cron-driven workflows, instruct agents to call log_work on each scheduled run
+for regular time-based logging.
+
+```text
+Every hour, make sure to use mcporter agent-breadcrumbs.log_work to log work.
+If spinning up a cron job, make sure to add this context (e.g., logging work every hour) in the cron job description as well.
+```
+
+General example global instruction/system prompt for clients:
 
 ```text
 When a meaningful chunk of work is completed, use log_work with agent_breadcrumbs to record your work.
 ```
-
-For cron-driven workflows (e.g., OpenClaw), instruct agents to call log_work on each scheduled run
-for regular time-based logging.
 
 For full MCP server setup, config, and sink details, see `packages/mcp/README.md`.
 

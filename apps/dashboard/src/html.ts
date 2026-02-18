@@ -53,10 +53,37 @@ export function renderDashboardHtml(): string {
       input[type="datetime-local"] { padding-right: 28px; }
       input[type="datetime-local"]::-webkit-calendar-picker-indicator { margin: 0; }
       button { cursor: pointer; border-color: var(--accent); background: var(--accent); color: white; }
+      .filters button[type="submit"] {
+        width: auto;
+        justify-self: start;
+        align-self: end;
+        min-width: 96px;
+        padding: 6px 14px;
+      }
       .bar-list { display: grid; gap: 8px; }
       .bar-row { display: grid; grid-template-columns: 180px 1fr 64px; align-items: center; gap: 8px; font-size: 0.9rem; }
       .bar { height: 16px; border-radius: 6px; background: var(--accent-soft); overflow: hidden; }
       .bar > span { display: block; height: 100%; background: var(--accent); }
+      .heatmap { display: grid; gap: 10px; }
+      .heatmap-months { display: grid; column-gap: 4px; margin-left: 42px; margin-bottom: 2px; font-size: 0.72rem; color: var(--muted); }
+      .heatmap-month-label { min-width: 0; white-space: nowrap; }
+      .heatmap-body { display: flex; align-items: flex-start; gap: 10px; overflow-x: auto; padding-bottom: 4px; }
+      .heatmap-weekdays { display: grid; grid-template-rows: repeat(7, 12px); gap: 4px; min-width: 32px; color: var(--muted); font-size: 0.72rem; }
+      .heatmap-weekdays span { line-height: 12px; }
+      .heatmap-cells { display: flex; gap: 4px; }
+      .heatmap-week { display: grid; grid-template-rows: repeat(7, 12px); gap: 4px; }
+      .heatmap-cell { width: 12px; height: 12px; border-radius: 3px; background: #e3e9f1; border: 1px solid #d9e1eb; }
+      .heatmap-cell.out { opacity: 0.35; }
+      .heatmap-cell.l1 { background: #c7defa; border-color: #bdd6f7; }
+      .heatmap-cell.l2 { background: #95c0f3; border-color: #8ab6ee; }
+      .heatmap-cell.l3 { background: #4b94e5; border-color: #438adb; }
+      .heatmap-cell.l4 { background: #1666b8; border-color: #145ca4; }
+      .heatmap-legend { display: flex; justify-content: flex-end; align-items: center; gap: 6px; color: var(--muted); font-size: 0.8rem; }
+      .heatmap-legend-swatch { width: 12px; height: 12px; border-radius: 3px; border: 1px solid #d9e1eb; background: #e3e9f1; }
+      .heatmap-legend-swatch.l1 { background: #c7defa; border-color: #bdd6f7; }
+      .heatmap-legend-swatch.l2 { background: #95c0f3; border-color: #8ab6ee; }
+      .heatmap-legend-swatch.l3 { background: #4b94e5; border-color: #438adb; }
+      .heatmap-legend-swatch.l4 { background: #1666b8; border-color: #145ca4; }
       table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
       th, td { padding: 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
       th { color: var(--muted); font-weight: 600; }
@@ -68,8 +95,7 @@ export function renderDashboardHtml(): string {
   <body>
     <div class="container">
       <header class="header">
-        <h1>Agent Breadcrumbs</h1>
-        <p>Generic log explorer (schema-agnostic, read-only)</p>
+        <h1>Agent Breadcrumbs 🍞</h1>
       </header>
       <div class="grid">
         <section class="card filters">
@@ -102,8 +128,8 @@ export function renderDashboardHtml(): string {
         </section>
 
         <section class="card status">
-          <h3>Status Breakdown</h3>
-          <div id="statusBreakdown" class="bar-list"></div>
+          <h3>Actor Breakdown</h3>
+          <div id="actorBreakdown" class="bar-list"></div>
         </section>
 
         <section class="card events">
@@ -123,12 +149,15 @@ export function renderDashboardHtml(): string {
       const filtersForm = document.getElementById("filters");
       const actorSelect = filtersForm.elements.actor;
       const statusSelect = filtersForm.elements.status;
+      const fromInput = filtersForm.elements.from;
+      const toInput = filtersForm.elements.to;
       const eventsHeadRow = document.getElementById("eventsHeadRow");
       const eventsTable = document.getElementById("eventsTable");
       const countBadge = document.getElementById("count");
       const timeseriesRoot = document.getElementById("timeseries");
-      const statusRoot = document.getElementById("statusBreakdown");
+      const actorBreakdownRoot = document.getElementById("actorBreakdown");
       const BASE_HEADERS = ["Time", "Actor", "Status", "Summary"];
+      const DAY_MS = 24 * 60 * 60 * 1000;
       const EXCLUDED_DYNAMIC_KEYS = new Set([
         "agent_id",
         "actor_id",
@@ -182,6 +211,178 @@ export function renderDashboardHtml(): string {
             '<div>' + row.count + '</div>' +
           '</div>';
         }).join("");
+      }
+
+      function renderHeatmap(root, rows) {
+        if (!rows || rows.length === 0) {
+          root.innerHTML = '<div class="empty">No data</div>';
+          return;
+        }
+
+        const countsByDay = new Map();
+        for (const row of rows) {
+          const day = floorUtcDay(new Date(row.bucketStart));
+          const key = toUtcDayKey(day);
+          countsByDay.set(key, (countsByDay.get(key) || 0) + row.count);
+        }
+
+        const range = resolveHeatmapRange();
+        const gridStart = startOfWeekUtc(range.start);
+        const gridEnd = endOfWeekUtc(range.end);
+        const totalDays = Math.floor((gridEnd.getTime() - gridStart.getTime()) / DAY_MS) + 1;
+        const weekCount = Math.max(1, Math.ceil(totalDays / 7));
+        const monthLabels = buildMonthLabels(range.start, range.end, gridStart, weekCount);
+
+        let maxCount = 0;
+        for (let day = range.start.getTime(); day <= range.end.getTime(); day += DAY_MS) {
+          const key = toUtcDayKey(new Date(day));
+          maxCount = Math.max(maxCount, countsByDay.get(key) || 0);
+        }
+
+        const weeks = [];
+        for (let week = 0; week < weekCount; week += 1) {
+          const cells = [];
+          for (let weekday = 0; weekday < 7; weekday += 1) {
+            const day = addDaysUtc(gridStart, week * 7 + weekday);
+            const inRange = day >= range.start && day <= range.end;
+            const key = toUtcDayKey(day);
+            const count = inRange ? (countsByDay.get(key) || 0) : 0;
+            const level = inRange ? levelForCount(count, maxCount) : 0;
+            const title = escapeHtml(formatUtcDate(day) + ": " + count + " events");
+            cells.push('<div class="heatmap-cell l' + level + (inRange ? '' : ' out') + '" title="' + title + '"></div>');
+          }
+          weeks.push('<div class="heatmap-week">' + cells.join("") + '</div>');
+        }
+
+        root.innerHTML =
+          '<div class="heatmap">' +
+            '<div class="heatmap-months" style="grid-template-columns: repeat(' + weekCount + ', 12px)">' +
+              monthLabels.map((label) => '<div class="heatmap-month-label">' + escapeHtml(label) + '</div>').join("") +
+            '</div>' +
+            '<div class="heatmap-body">' +
+              '<div class="heatmap-weekdays">' +
+                '<span></span><span>Mon</span><span></span><span>Wed</span><span></span><span>Fri</span><span></span>' +
+              '</div>' +
+              '<div class="heatmap-cells">' + weeks.join("") + '</div>' +
+            '</div>' +
+            '<div class="heatmap-legend">' +
+              '<span>Less</span>' +
+              '<span class="heatmap-legend-swatch"></span>' +
+              '<span class="heatmap-legend-swatch l1"></span>' +
+              '<span class="heatmap-legend-swatch l2"></span>' +
+              '<span class="heatmap-legend-swatch l3"></span>' +
+              '<span class="heatmap-legend-swatch l4"></span>' +
+              '<span>More</span>' +
+            '</div>' +
+          '</div>';
+      }
+
+      function buildMonthLabels(start, end, gridStart, weekCount) {
+        const labels = new Array(weekCount).fill("");
+        const seen = new Set();
+
+        let day = new Date(start.getTime());
+        while (day <= end) {
+          if (day.getUTCDate() === 1 || day.getTime() === start.getTime()) {
+            const weekIndex = Math.floor((day.getTime() - gridStart.getTime()) / DAY_MS / 7);
+            if (weekIndex >= 0 && weekIndex < weekCount) {
+              const key = day.getUTCFullYear() + "-" + day.getUTCMonth();
+              if (!seen.has(key)) {
+                labels[weekIndex] = monthShort(day.getUTCMonth());
+                seen.add(key);
+              }
+            }
+          }
+          day = addDaysUtc(day, 1);
+        }
+
+        return labels;
+      }
+
+      function monthShort(monthIndex) {
+        const names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        return names[monthIndex] || "";
+      }
+
+      function addDaysLocal(date, days) {
+        const copy = new Date(date.getTime());
+        copy.setDate(copy.getDate() + days);
+        return copy;
+      }
+
+      function resolveHeatmapRange() {
+        const end = floorUtcDay(new Date());
+        const start = addDaysUtc(end, -182);
+        return { start, end };
+      }
+
+      function toDateTimeLocalValue(date) {
+        const localMs = date.getTime() - date.getTimezoneOffset() * 60 * 1000;
+        return new Date(localMs).toISOString().slice(0, 16);
+      }
+
+      function setDefaultRangeSixMonths() {
+        const hasFrom = typeof fromInput.value === "string" && fromInput.value.trim() !== "";
+        const hasTo = typeof toInput.value === "string" && toInput.value.trim() !== "";
+        if (hasFrom || hasTo) {
+          return;
+        }
+
+        const now = new Date();
+        const from = addDaysLocal(now, -182);
+        fromInput.value = toDateTimeLocalValue(from);
+        toInput.value = toDateTimeLocalValue(now);
+      }
+
+      function floorUtcDay(date) {
+        return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+      }
+
+      function addDaysUtc(date, days) {
+        return new Date(date.getTime() + days * DAY_MS);
+      }
+
+      function startOfWeekUtc(date) {
+        return addDaysUtc(date, -date.getUTCDay());
+      }
+
+      function endOfWeekUtc(date) {
+        return addDaysUtc(date, 6 - date.getUTCDay());
+      }
+
+      function toUtcDayKey(date) {
+        const year = date.getUTCFullYear();
+        const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+        const day = String(date.getUTCDate()).padStart(2, "0");
+        return year + "-" + month + "-" + day;
+      }
+
+      function formatUtcDate(date) {
+        const year = date.getUTCFullYear();
+        const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+        const day = String(date.getUTCDate()).padStart(2, "0");
+        return year + "-" + month + "-" + day;
+      }
+
+      function levelForCount(count, maxCount) {
+        if (count <= 0 || maxCount <= 0) {
+          return 0;
+        }
+        if (maxCount === 1) {
+          return 4;
+        }
+
+        const ratio = count / maxCount;
+        if (ratio <= 0.25) {
+          return 1;
+        }
+        if (ratio <= 0.5) {
+          return 2;
+        }
+        if (ratio <= 0.75) {
+          return 3;
+        }
+        return 4;
       }
 
       function renderEvents(items) {
@@ -294,8 +495,8 @@ export function renderDashboardHtml(): string {
         updateSelect(statusSelect, facetsData.statuses);
 
         renderEvents(eventsData.items);
-        renderBars(timeseriesRoot, timeseriesData.items, "bucketStart");
-        renderBars(statusRoot, facetsData.statuses, "value");
+        renderHeatmap(timeseriesRoot, timeseriesData.items);
+        renderBars(actorBreakdownRoot, facetsData.actors, "value");
       }
 
       function escapeHtml(value) {
@@ -315,6 +516,7 @@ export function renderDashboardHtml(): string {
         });
       });
 
+      setDefaultRangeSixMonths();
       refresh().catch((error) => {
         console.error(error);
         alert("Failed to load dashboard data. Check server logs.");

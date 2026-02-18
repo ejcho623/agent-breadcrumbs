@@ -70,9 +70,11 @@ Claude Desktop (`claude_desktop_config.json`):
 Example global instruction/system prompt for clients:
 
 ```text
-When a meaningful chunk of work is completed, call log_work exactly once with
-log_record matching the configured tool schema.
+When a meaningful chunk of work is completed, use log_work with agent_breadcrumbs to record your work.
 ```
+
+For cron-driven workflows (e.g., OpenClaw), instruct agents to call log_work on each scheduled run
+for regular time-based logging.
 
 For full MCP server setup, config, and sink details, see `packages/mcp/README.md`.
 

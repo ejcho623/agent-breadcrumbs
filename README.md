@@ -2,6 +2,8 @@
 
 Lightweight logging & observability for agent work across clients (Codex, Claude, Cursor, ChatGPT, OpenClaw, and others).
 
+https://github.com/user-attachments/assets/b78cfb0c-707e-4a97-b751-a7ac15dc61da
+
 ## What You Get
 
 - One MCP tool (`log_work`) that aggregates work done across different agents for single or multiple users.

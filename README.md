@@ -2,7 +2,7 @@
 
 Lightweight logging & observability for agent work across clients (Codex, Claude, Cursor, ChatGPT, OpenClaw, and others).
 
-https://github.com/user-attachments/assets/b78cfb0c-707e-4a97-b751-a7ac15dc61da
+https://github.com/user-attachments/assets/3eac31a8-107c-4a82-a14c-dcfa500dd1a9
 
 ## What You Get
 

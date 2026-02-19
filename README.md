@@ -113,6 +113,7 @@ Top-level config file is JSON and supports:
 
 - `schema` for fully custom `log_record` properties, or
 - `schema_profile` for built-in profile files in `packages/mcp/examples/schema_profiles`
+- `user_name` for server-side user identity injection into persisted records
 - `sink` for destination settings (`jsonl`, `webhook`, `postgres`)
 
 Do not set both `schema` and `schema_profile` together.
@@ -122,6 +123,7 @@ Default behavior when omitted:
 - schema: built-in default (`agent_id`, `timestamp`, `work_summary`, `additional`)
 - sink: `jsonl`
 - output file: `~/.agent-breadcrumbs/logs.jsonl`
+- user_name: not injected
 
 ## Why Config
 

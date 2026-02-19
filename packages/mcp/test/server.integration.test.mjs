@@ -184,6 +184,52 @@ test('log_work success path persists only log_record + metadata', async () => {
   }
 });
 
+test('server injects config.user_name into persisted log_record', async () => {
+  const cwd = await mkdtemp(path.join(os.tmpdir(), 'ab-user-name-'));
+  const configPath = path.join(cwd, 'server-config.json');
+
+  await writeFile(
+    configPath,
+    JSON.stringify({
+      user_name: 'ejcho623',
+      sink: {
+        name: 'jsonl',
+        config: {
+          log_file: path.join(cwd, 'data', 'logs.jsonl'),
+        },
+      },
+    }),
+    'utf8',
+  );
+
+  try {
+    await withClient({ cwd, configPath }, async (client) => {
+      const result = await client.callTool({
+        name: 'log_work',
+        arguments: {
+          log_record: {
+            work_summary: 'server metadata injection test',
+          },
+        },
+      });
+
+      assert.equal(result.isError, undefined);
+      assert.equal(result.structuredContent.ok, true);
+    });
+
+    const logsPath = path.join(cwd, 'data', 'logs.jsonl');
+    const data = await readFile(logsPath, 'utf8');
+    const lines = data.trim().split('\n');
+    assert.equal(lines.length, 1);
+
+    const record = JSON.parse(lines[0]);
+    assert.equal(record.log_record._agent_breadcrumbs_server.user_name, 'ejcho623');
+    assert.equal(record.log_record._agent_breadcrumbs_server.source, 'config.user_name');
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
 test('schema validation rejects missing required log_record', async () => {
   const cwd = await mkdtemp(path.join(os.tmpdir(), 'ab-validation-'));
   try {
@@ -344,6 +390,29 @@ test('server startup fails when config file contains invalid JSON', async () => 
     });
 
     assert.match(stderr, /invalid json in config file/i);
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
+test('server startup fails when config.user_name is not a string', async () => {
+  const cwd = await mkdtemp(path.join(os.tmpdir(), 'ab-invalid-user-name-'));
+  const configPath = path.join(cwd, 'server-config.json');
+  try {
+    await writeFile(
+      configPath,
+      JSON.stringify({
+        user_name: 123,
+      }),
+      'utf8',
+    );
+
+    const stderr = await runServerExpectStartupFailure({
+      cwd,
+      args: ['--config', configPath],
+    });
+
+    assert.match(stderr, /config\.user_name must be a non-empty string/i);
   } finally {
     await rm(cwd, { recursive: true, force: true });
   }

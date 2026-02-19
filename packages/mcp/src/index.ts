@@ -72,12 +72,13 @@ async function main(): Promise<void> {
     }
 
     const logId = randomUUID();
+    const enrichedLogRecord = addServerMetadata(validatedArgs.log_record, runtimeConfig.userName);
 
     try {
       await logSink.write({
         log_id: logId,
         server_timestamp: new Date().toISOString(),
-        log_record: validatedArgs.log_record,
+        log_record: enrichedLogRecord,
       });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
@@ -89,6 +90,31 @@ async function main(): Promise<void> {
 
   const transport = new StdioServerTransport();
   await server.connect(transport);
+}
+
+function addServerMetadata(logRecord: Record<string, unknown>, userName?: string): Record<string, unknown> {
+  if (!userName) {
+    return logRecord;
+  }
+
+  const existingMetadata = toObject(logRecord._agent_breadcrumbs_server);
+
+  return {
+    ...logRecord,
+    _agent_breadcrumbs_server: {
+      ...existingMetadata,
+      user_name: userName,
+      source: "config.user_name",
+    },
+  };
+}
+
+function toObject(value: unknown): Record<string, unknown> {
+  if (!value || Array.isArray(value) || typeof value !== "object") {
+    return {};
+  }
+
+  return value as Record<string, unknown>;
 }
 
 main().catch((error: unknown) => {

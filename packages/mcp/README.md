@@ -74,6 +74,7 @@ Top-level keys:
 
 - `schema` (object): custom `log_record` JSON-schema-like property map
 - `schema_profile` (string): loads a built-in profile from `examples/schema_profiles/*.json`
+- `user_name` (string, optional): server-side identity to inject into each persisted log record
 - `sink` (object): sink type + sink config
 
 Rules:
@@ -86,6 +87,11 @@ Rules:
   - `additional: object`
 - If `sink` is omitted, defaults to JSONL at `~/.agent-breadcrumbs/logs.jsonl`.
 - If you need your own structure, use `schema` to define custom fields and types.
+
+When `user_name` is configured, the server injects:
+
+- `log_record._agent_breadcrumbs_server.user_name`
+- `log_record._agent_breadcrumbs_server.source = "config.user_name"`
 
 ### Built-In Schema Profiles
 
@@ -128,6 +134,7 @@ Profile + JSONL:
 ```json
 {
   "schema_profile": "agent_insights_v1",
+  "user_name": "ejcho623",
   "sink": {
     "name": "jsonl",
     "config": {

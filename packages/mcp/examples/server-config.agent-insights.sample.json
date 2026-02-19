@@ -1,5 +1,6 @@
 {
   "schema_profile": "agent_insights_v1",
+  "user_name": "John C.",
   "sink": {
     "name": "jsonl",
     "config": {

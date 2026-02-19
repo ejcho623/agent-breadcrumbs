@@ -17,6 +17,7 @@ export interface RuntimeConfig {
   schemaSource: SchemaSource;
   schemaProfileName?: SchemaProfileName;
   logRecordProperties: LogRecordProperties;
+  userName?: string;
   sink: SinkConfig;
 }
 
@@ -61,6 +62,7 @@ export function resolveRuntimeConfig(cliConfig: CliConfig): RuntimeConfig {
     schemaSource: schemaResolution.schemaSource,
     schemaProfileName: schemaResolution.schemaProfileName,
     logRecordProperties: schemaResolution.properties,
+    userName: resolveOptionalUserName(rawConfig.user_name),
     sink,
   };
 }
@@ -139,4 +141,16 @@ function resolveSchemaConfig(rawConfig: Record<string, unknown>): {
   }
 
   return resolveLogRecordProperties(rawConfig.schema ?? DEFAULT_SERVER_CONFIG.schema);
+}
+
+function resolveOptionalUserName(rawUserName: unknown): string | undefined {
+  if (rawUserName === undefined) {
+    return undefined;
+  }
+
+  if (typeof rawUserName !== "string" || rawUserName.trim() === "") {
+    throw new Error("config.user_name must be a non-empty string");
+  }
+
+  return rawUserName.trim();
 }

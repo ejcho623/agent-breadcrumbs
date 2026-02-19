@@ -6,3 +6,4 @@ data/
 packages/mcp/examples/*.local.json
 apps/dashboard/examples/*.local.json
 apps/dashboard/.vercel/
+.vercel

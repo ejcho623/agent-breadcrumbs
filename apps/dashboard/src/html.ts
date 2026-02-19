@@ -8,7 +8,7 @@ export function renderDashboardHtml(): string {
     <style>
       :root {
         color-scheme: light;
-        --bg: #FAF9F5;
+        --bg: #f4f4f3;
         --card: #ffffff;
         --text: #1d2733;
         --muted: #5a6775;
@@ -22,7 +22,7 @@ export function renderDashboardHtml(): string {
         margin: 0;
         font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
         color: var(--text);
-        background: radial-gradient(circle at top right, #fdfcf8 0%, var(--bg) 45%);
+        background: radial-gradient(circle at top right, #f8f8f7 0%, var(--bg) 45%);
       }
       .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
       .header { margin-bottom: 16px; }

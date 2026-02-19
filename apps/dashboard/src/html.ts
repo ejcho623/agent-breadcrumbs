@@ -151,19 +151,21 @@ export function renderDashboardHtml(): string {
             <label>To
               <input type="datetime-local" name="to" />
             </label>
-            <label>Actor
+            <label>Agent
               <select name="actor"><option value="">All</option></select>
             </label>
             <label>User
               <select name="user"><option value="">All</option></select>
             </label>
-            <label>Search
-              <input type="text" name="search" placeholder="summary or JSON" />
-            </label>
             <label>Limit
               <input type="number" name="limit" min="1" max="500" value="100" />
             </label>
-            <button type="submit">Refresh</button>
+            <div style="grid-column: 1 / -1; display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end;">
+              <label>Search
+                <input type="text" name="search" placeholder="Search for anything..." />
+              </label>
+              <button type="submit">Refresh</button>
+            </div>
           </form>
         </section>
 
@@ -173,7 +175,7 @@ export function renderDashboardHtml(): string {
         </section>
 
         <section class="card status">
-          <h3>Actor Breakdown</h3>
+          <h3>Agent Breakdown</h3>
           <div id="actorBreakdown" class="bar-list"></div>
         </section>
 
@@ -203,7 +205,7 @@ export function renderDashboardHtml(): string {
       const countBadge = document.getElementById("count");
       const timeseriesRoot = document.getElementById("timeseries");
       const actorBreakdownRoot = document.getElementById("actorBreakdown");
-      const BASE_HEADERS = ["Time (Server)", "Actor", "User", "Summary"];
+      const BASE_HEADERS = ["Time (Server)", "Agent", "User", "Summary"];
       const DAY_MS = 24 * 60 * 60 * 1000;
       const EXCLUDED_DYNAMIC_KEYS = new Set([
         "agent_id",

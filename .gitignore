@@ -5,6 +5,4 @@ data/
 .DS_Store
 packages/mcp/examples/*.local.json
 apps/dashboard/examples/*.local.json
-apps/dashboard/vercel.json
-apps/dashboard/.gitignore
 apps/dashboard/.vercel/

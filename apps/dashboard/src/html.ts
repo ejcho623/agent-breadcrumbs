@@ -167,7 +167,6 @@ export function renderDashboardHtml(): string {
         "work_summary",
         "summary",
         "additional",
-        "_agent_breadcrumbs_server",
       ]);
       const MAX_DYNAMIC_COLUMNS = 4;
 

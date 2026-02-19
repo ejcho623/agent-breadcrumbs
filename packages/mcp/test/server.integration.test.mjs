@@ -223,8 +223,7 @@ test('server injects config.user_name into persisted log_record', async () => {
     assert.equal(lines.length, 1);
 
     const record = JSON.parse(lines[0]);
-    assert.equal(record.log_record._agent_breadcrumbs_server.user_name, 'ejcho623');
-    assert.equal(record.log_record._agent_breadcrumbs_server.source, 'config.user_name');
+    assert.equal(record.log_record.user_name, 'ejcho623');
   } finally {
     await rm(cwd, { recursive: true, force: true });
   }

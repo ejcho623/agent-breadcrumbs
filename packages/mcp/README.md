@@ -90,8 +90,7 @@ Rules:
 
 When `user_name` is configured, the server injects:
 
-- `log_record._agent_breadcrumbs_server.user_name`
-- `log_record._agent_breadcrumbs_server.source = "config.user_name"`
+- `log_record.user_name`
 
 ### Built-In Schema Profiles
 

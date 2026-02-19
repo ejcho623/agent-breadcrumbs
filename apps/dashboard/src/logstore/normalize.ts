@@ -36,16 +36,6 @@ function readString(record: Record<string, unknown>, key: string): string | null
   return typeof value === "string" && value.trim() !== "" ? value : null;
 }
 
-function readServerUserName(record: Record<string, unknown>): string | null {
-  const serverMetadata = record._agent_breadcrumbs_server;
-  if (!serverMetadata || Array.isArray(serverMetadata) || typeof serverMetadata !== "object") {
-    return null;
-  }
-
-  const value = (serverMetadata as Record<string, unknown>).user_name;
-  return typeof value === "string" && value.trim() !== "" ? value : null;
-}
-
 export function normalizeEnvelope(
   row: EnvelopeRow,
   source: NormalizedEvent["source"],
@@ -64,7 +54,7 @@ export function normalizeEnvelope(
 
   const eventTime = serverTimestamp;
   const actor = readString(payloadObject, "agent_id") ?? readString(payloadObject, "actor_id");
-  const userName = readServerUserName(payloadObject) ?? readString(payloadObject, "user_name");
+  const userName = readString(payloadObject, "user_name");
   const summary = readString(payloadObject, "work_summary") ?? readString(payloadObject, "summary");
   const status = readString(payloadObject, "status");
 

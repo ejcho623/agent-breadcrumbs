@@ -82,9 +82,7 @@ export class PostgresLogStore implements LogStore {
 
     if (query.user) {
       params.push(query.user);
-      whereClauses.push(
-        `COALESCE(log_record->'_agent_breadcrumbs_server'->>'user_name', log_record->>'user_name') = $${params.length}`,
-      );
+      whereClauses.push(`log_record->>'user_name' = $${params.length}`);
     }
 
     if (query.search) {

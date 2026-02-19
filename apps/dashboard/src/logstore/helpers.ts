@@ -30,20 +30,20 @@ export function applyEventQuery(events: NormalizedEvent[], query: EventQuery): N
 
 export function buildFacets(events: NormalizedEvent[]): Facets {
   const actorCounts = new Map<string, number>();
-  const statusCounts = new Map<string, number>();
+  const userCounts = new Map<string, number>();
 
   for (const event of events) {
     if (event.actor) {
       actorCounts.set(event.actor, (actorCounts.get(event.actor) ?? 0) + 1);
     }
-    if (event.status) {
-      statusCounts.set(event.status, (statusCounts.get(event.status) ?? 0) + 1);
+    if (event.userName) {
+      userCounts.set(event.userName, (userCounts.get(event.userName) ?? 0) + 1);
     }
   }
 
   return {
     actors: mapCounts(actorCounts),
-    statuses: mapCounts(statusCounts),
+    users: mapCounts(userCounts),
   };
 }
 
@@ -69,7 +69,7 @@ function mapCounts(input: Map<string, number>): Array<{ value: string; count: nu
 
 function matchesQuery(
   event: NormalizedEvent,
-  query: Pick<EventQuery, "from" | "to" | "actor" | "status" | "search">,
+  query: Pick<EventQuery, "from" | "to" | "actor" | "user" | "search">,
 ): boolean {
   const eventMillis = Date.parse(event.eventTime);
 
@@ -85,7 +85,7 @@ function matchesQuery(
     return false;
   }
 
-  if (query.status && event.status !== query.status) {
+  if (query.user && event.userName !== query.user) {
     return false;
   }
 

@@ -59,7 +59,7 @@ export class PostgresLogStore implements LogStore {
     from?: Date;
     to?: Date;
     actor?: string;
-    status?: string;
+    user?: string;
     search?: string;
   }): Promise<NormalizedEvent[]> {
     const whereClauses: string[] = [];
@@ -80,9 +80,11 @@ export class PostgresLogStore implements LogStore {
       whereClauses.push(`COALESCE(log_record->>'agent_id', log_record->>'actor_id') = $${params.length}`);
     }
 
-    if (query.status) {
-      params.push(query.status);
-      whereClauses.push(`log_record->>'status' = $${params.length}`);
+    if (query.user) {
+      params.push(query.user);
+      whereClauses.push(
+        `COALESCE(log_record->'_agent_breadcrumbs_server'->>'user_name', log_record->>'user_name') = $${params.length}`,
+      );
     }
 
     if (query.search) {

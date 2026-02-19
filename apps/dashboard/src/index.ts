@@ -88,14 +88,14 @@ function parseCommonQuery(searchParams: URLSearchParams): {
   from?: Date;
   to?: Date;
   actor?: string;
-  status?: string;
+  user?: string;
   search?: string;
 } {
   return {
     from: parseOptionalDate(searchParams.get("from"), "from"),
     to: parseOptionalDate(searchParams.get("to"), "to"),
     actor: parseOptionalString(searchParams.get("actor")),
-    status: parseOptionalString(searchParams.get("status")),
+    user: parseOptionalString(searchParams.get("user")),
     search: parseOptionalString(searchParams.get("search")),
   };
 }

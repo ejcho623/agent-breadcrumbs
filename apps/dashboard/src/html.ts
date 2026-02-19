@@ -95,7 +95,7 @@ export function renderDashboardHtml(): string {
   <body>
     <div class="container">
       <header class="header">
-        <h1>Agent Breadcrumbs 🍞</h1>
+        <h1>Agent Breadcrumbs 🍞🍞🍞</h1>
       </header>
       <div class="grid">
         <section class="card filters">
@@ -109,8 +109,8 @@ export function renderDashboardHtml(): string {
             <label>Actor
               <select name="actor"><option value="">All</option></select>
             </label>
-            <label>Status
-              <select name="status"><option value="">All</option></select>
+            <label>User
+              <select name="user"><option value="">All</option></select>
             </label>
             <label>Search
               <input type="text" name="search" placeholder="summary or JSON" />
@@ -148,7 +148,7 @@ export function renderDashboardHtml(): string {
     <script>
       const filtersForm = document.getElementById("filters");
       const actorSelect = filtersForm.elements.actor;
-      const statusSelect = filtersForm.elements.status;
+      const userSelect = filtersForm.elements.user;
       const fromInput = filtersForm.elements.from;
       const toInput = filtersForm.elements.to;
       const eventsHeadRow = document.getElementById("eventsHeadRow");
@@ -156,16 +156,18 @@ export function renderDashboardHtml(): string {
       const countBadge = document.getElementById("count");
       const timeseriesRoot = document.getElementById("timeseries");
       const actorBreakdownRoot = document.getElementById("actorBreakdown");
-      const BASE_HEADERS = ["Time", "Actor", "Status", "Summary"];
+      const BASE_HEADERS = ["Time (Server)", "Actor", "User", "Summary"];
       const DAY_MS = 24 * 60 * 60 * 1000;
       const EXCLUDED_DYNAMIC_KEYS = new Set([
         "agent_id",
         "actor_id",
+        "user_name",
         "timestamp",
         "status",
         "work_summary",
         "summary",
         "additional",
+        "_agent_breadcrumbs_server",
       ]);
       const MAX_DYNAMIC_COLUMNS = 4;
 
@@ -405,7 +407,7 @@ export function renderDashboardHtml(): string {
           return '<tr>' +
             '<td>' + new Date(item.eventTime).toLocaleString() + '</td>' +
             '<td>' + escapeHtml(item.actor || '-') + '</td>' +
-            '<td>' + escapeHtml(item.status || '-') + '</td>' +
+            '<td>' + escapeHtml(item.userName || '-') + '</td>' +
             '<td>' + escapeHtml(item.summary || '-') + '</td>' +
             dynamicCells +
             '<td><pre>' + escapeHtml(JSON.stringify(item.payload, null, 2)) + '</pre></td>' +
@@ -492,7 +494,7 @@ export function renderDashboardHtml(): string {
         const timeseriesData = await results[2].json();
 
         updateSelect(actorSelect, facetsData.actors);
-        updateSelect(statusSelect, facetsData.statuses);
+        updateSelect(userSelect, facetsData.users);
 
         renderEvents(eventsData.items);
         renderHeatmap(timeseriesRoot, timeseriesData.items);

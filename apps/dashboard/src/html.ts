@@ -8,11 +8,11 @@ export function renderDashboardHtml(): string {
     <style>
       :root {
         color-scheme: light;
-        --bg: #f4f5f7;
+        --bg: #f4f4f3;
         --card: #ffffff;
         --text: #1d2733;
         --muted: #5a6775;
-        --line: #d8dee6;
+        --line: #dcdede;
         --accent: #0069d9;
         --accent-soft: #dbeafe;
         --ok: #0f766e;
@@ -22,7 +22,7 @@ export function renderDashboardHtml(): string {
         margin: 0;
         font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
         color: var(--text);
-        background: radial-gradient(circle at top right, #eaf2ff 0%, var(--bg) 40%);
+        background: radial-gradient(circle at top right, #f8f8f7 0%, var(--bg) 45%);
       }
       .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
       .header { margin-bottom: 16px; }
@@ -84,10 +84,55 @@ export function renderDashboardHtml(): string {
       .heatmap-legend-swatch.l2 { background: #95c0f3; border-color: #8ab6ee; }
       .heatmap-legend-swatch.l3 { background: #4b94e5; border-color: #438adb; }
       .heatmap-legend-swatch.l4 { background: #1666b8; border-color: #145ca4; }
-      table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-      th, td { padding: 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
-      th { color: var(--muted); font-weight: 600; }
-      td pre { margin: 0; max-height: 120px; overflow: auto; font-size: 0.77rem; white-space: pre-wrap; }
+      .events-table-wrap {
+        margin-top: 10px;
+        border: 1px solid #e5e9ef;
+        border-radius: 10px;
+        overflow: auto;
+        background: #fff;
+      }
+      table { width: 100%; min-width: 940px; border-collapse: collapse; font-size: 0.88rem; }
+      th, td { padding: 8px 10px; border-bottom: 1px solid #edf1f5; text-align: left; vertical-align: top; }
+      th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        color: #667487;
+        font-weight: 600;
+        font-size: 0.78rem;
+        letter-spacing: 0.01em;
+        background: #f8fafc;
+      }
+      tbody tr:hover { background: #fafcff; }
+      tbody tr:last-child td { border-bottom: none; }
+      td pre {
+        margin: 0;
+        max-height: 120px;
+        overflow: auto;
+        font-size: 0.77rem;
+        white-space: pre-wrap;
+        background: #f8fafc;
+        border: 1px solid #e9edf3;
+        border-radius: 8px;
+        padding: 6px 8px;
+      }
+      .name-pill {
+        display: inline-flex;
+        align-items: center;
+        max-width: 180px;
+        padding: 1px 8px;
+        border-radius: 999px;
+        border: 1px solid transparent;
+        font-size: 0.77rem;
+        font-weight: 600;
+        line-height: 1.4;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .time-cell { white-space: nowrap; color: #4d5968; font-size: 0.84rem; }
+      .summary-cell { min-width: 260px; }
+      .muted-cell { color: #7a8798; }
       .pill { display: inline-block; font-size: 0.75rem; border-radius: 999px; padding: 2px 8px; background: #e6f4f1; color: var(--ok); }
       .empty { color: var(--muted); font-style: italic; }
     </style>
@@ -135,12 +180,14 @@ export function renderDashboardHtml(): string {
         <section class="card events">
           <h3>Events</h3>
           <div id="count" class="pill">0 events</div>
-          <table>
-            <thead>
-              <tr id="eventsHeadRow"></tr>
-            </thead>
-            <tbody id="eventsTable"></tbody>
-          </table>
+          <div class="events-table-wrap">
+            <table>
+              <thead>
+                <tr id="eventsHeadRow"></tr>
+              </thead>
+              <tbody id="eventsTable"></tbody>
+            </table>
+          </div>
         </section>
       </div>
     </div>
@@ -404,14 +451,42 @@ export function renderDashboardHtml(): string {
           }).join("");
 
           return '<tr>' +
-            '<td>' + new Date(item.eventTime).toLocaleString() + '</td>' +
-            '<td>' + escapeHtml(item.actor || '-') + '</td>' +
-            '<td>' + escapeHtml(item.userName || '-') + '</td>' +
-            '<td>' + escapeHtml(item.summary || '-') + '</td>' +
+            '<td class="time-cell">' + new Date(item.eventTime).toLocaleString() + '</td>' +
+            '<td>' + renderNamePill(item.actor, 'actor') + '</td>' +
+            '<td>' + renderNamePill(item.userName, 'user') + '</td>' +
+            '<td class="summary-cell">' + escapeHtml(item.summary || '-') + '</td>' +
             dynamicCells +
             '<td><pre>' + escapeHtml(JSON.stringify(item.payload, null, 2)) + '</pre></td>' +
           '</tr>';
         }).join("");
+      }
+
+      function renderNamePill(value, kind) {
+        if (typeof value !== "string" || value.trim() === "") {
+          return '<span class="muted-cell">-</span>';
+        }
+
+        const safeValue = escapeHtml(value);
+        const style = buildLabelStyle(value, kind);
+        return '<span class="name-pill" style="' + style + '">' + safeValue + '</span>';
+      }
+
+      function buildLabelStyle(value, kind) {
+        const base = hashString(kind + ":" + value);
+        const hue = base % 360;
+        const bg = "hsl(" + hue + " 75% 95%)";
+        const border = "hsl(" + hue + " 45% 82%)";
+        const text = "hsl(" + hue + " 30% 32%)";
+        return "background:" + bg + ";border-color:" + border + ";color:" + text + ";";
+      }
+
+      function hashString(input) {
+        let hash = 0;
+        for (let i = 0; i < input.length; i += 1) {
+          hash = ((hash << 5) - hash) + input.charCodeAt(i);
+          hash |= 0;
+        }
+        return Math.abs(hash);
       }
 
       function inferDynamicColumns(items) {

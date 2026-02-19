@@ -158,15 +158,18 @@ export function renderDashboardHtml(): string {
             <label>Model
               <select name="actor"><option value="">All</option></select>
             </label>
-            <label>User
+            <label>Name
               <select name="user"><option value="">All</option></select>
             </label>
             <label>Limit
               <input type="number" name="limit" min="1" max="500" value="100" />
             </label>
-            <div style="grid-column: 1 / -1; display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end;">
+            <div style="grid-column: 1 / -1; display: grid; grid-template-columns: minmax(260px, 1fr) 220px auto; gap: 10px; align-items: end;">
               <label>Search
                 <input type="text" name="search" placeholder="Search for anything..." />
+              </label>
+              <label>Tool
+                <select name="tool"><option value="">All</option></select>
               </label>
               <button type="submit">Refresh</button>
             </div>
@@ -201,6 +204,7 @@ export function renderDashboardHtml(): string {
     <script>
       const filtersForm = document.getElementById("filters");
       const actorSelect = filtersForm.elements.actor;
+      const toolSelect = filtersForm.elements.tool;
       const userSelect = filtersForm.elements.user;
       const fromInput = filtersForm.elements.from;
       const toInput = filtersForm.elements.to;
@@ -209,7 +213,7 @@ export function renderDashboardHtml(): string {
       const countBadge = document.getElementById("count");
       const timeseriesRoot = document.getElementById("timeseries");
       const actorBreakdownRoot = document.getElementById("actorBreakdown");
-      const BASE_HEADERS = ["Time", "Project", "Tool", "Model", "Summary", "Payload"];
+      const BASE_HEADERS = ["Time", "Project", "Tool", "Model", "Name", "Summary", "Payload"];
       const DAY_MS = 24 * 60 * 60 * 1000;
 
       function paramsFromForm() {
@@ -442,12 +446,14 @@ export function renderDashboardHtml(): string {
           const project = readDisplayString(item.payload.project);
           const tool = readDisplayString(item.payload.tool);
           const model = readDisplayString(item.payload.model) || readDisplayString(item.actor);
+          const userName = readDisplayString(item.userName);
 
           return '<tr>' +
             '<td class="time-cell">' + new Date(item.eventTime).toLocaleString() + '</td>' +
             '<td>' + renderNamePill(project, 'project') + '</td>' +
             '<td>' + renderNamePill(tool, 'tool') + '</td>' +
             '<td>' + renderNamePill(model, 'model') + '</td>' +
+            '<td>' + renderNamePill(userName, 'user') + '</td>' +
             '<td class="summary-cell">' + escapeHtml(item.summary || '-') + '</td>' +
             '<td><pre>' + escapeHtml(JSON.stringify(item.payload, null, 2)) + '</pre></td>' +
           '</tr>';
@@ -537,6 +543,7 @@ export function renderDashboardHtml(): string {
         const timeseriesData = await results[2].json();
 
         updateSelect(actorSelect, facetsData.actors);
+        updateSelect(toolSelect, facetsData.tools);
         updateSelect(userSelect, facetsData.users);
 
         renderEvents(eventsData.items);

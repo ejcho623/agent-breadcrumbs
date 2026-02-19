@@ -42,7 +42,7 @@ export class JsonlLogStore implements LogStore {
     return Promise.resolve();
   }
 
-  private async loadEvents(query?: { from?: Date; to?: Date; actor?: string; user?: string; search?: string }): Promise<NormalizedEvent[]> {
+  private async loadEvents(query?: { from?: Date; to?: Date; actor?: string; tool?: string; user?: string; search?: string }): Promise<NormalizedEvent[]> {
     let contents: string;
     try {
       contents = await readFile(this.filePath, "utf8");
@@ -82,6 +82,10 @@ export class JsonlLogStore implements LogStore {
       }
 
       if (query?.actor && normalized.actor !== query.actor) {
+        continue;
+      }
+
+      if (query?.tool && normalized.tool !== query.tool) {
         continue;
       }
 

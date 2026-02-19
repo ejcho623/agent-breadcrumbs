@@ -30,11 +30,15 @@ export function applyEventQuery(events: NormalizedEvent[], query: EventQuery): N
 
 export function buildFacets(events: NormalizedEvent[]): Facets {
   const actorCounts = new Map<string, number>();
+  const toolCounts = new Map<string, number>();
   const userCounts = new Map<string, number>();
 
   for (const event of events) {
     if (event.actor) {
       actorCounts.set(event.actor, (actorCounts.get(event.actor) ?? 0) + 1);
+    }
+    if (event.tool) {
+      toolCounts.set(event.tool, (toolCounts.get(event.tool) ?? 0) + 1);
     }
     if (event.userName) {
       userCounts.set(event.userName, (userCounts.get(event.userName) ?? 0) + 1);
@@ -43,6 +47,7 @@ export function buildFacets(events: NormalizedEvent[]): Facets {
 
   return {
     actors: mapCounts(actorCounts),
+    tools: mapCounts(toolCounts),
     users: mapCounts(userCounts),
   };
 }
@@ -69,7 +74,7 @@ function mapCounts(input: Map<string, number>): Array<{ value: string; count: nu
 
 function matchesQuery(
   event: NormalizedEvent,
-  query: Pick<EventQuery, "from" | "to" | "actor" | "user" | "search">,
+  query: Pick<EventQuery, "from" | "to" | "actor" | "tool" | "user" | "search">,
 ): boolean {
   const eventMillis = Date.parse(event.eventTime);
 
@@ -82,6 +87,10 @@ function matchesQuery(
   }
 
   if (query.actor && event.actor !== query.actor) {
+    return false;
+  }
+
+  if (query.tool && event.tool !== query.tool) {
     return false;
   }
 

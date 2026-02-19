@@ -55,6 +55,7 @@ export function normalizeEnvelope(
   const eventTime = serverTimestamp;
   const actor =
     readString(payloadObject, "model") ?? readString(payloadObject, "agent_id") ?? readString(payloadObject, "actor_id");
+  const tool = readString(payloadObject, "tool");
   const userName = readString(payloadObject, "user_name");
   const summary = readString(payloadObject, "work_summary") ?? readString(payloadObject, "summary");
   const status = readString(payloadObject, "status");
@@ -64,6 +65,7 @@ export function normalizeEnvelope(
     serverTimestamp,
     eventTime,
     actor,
+    tool,
     userName,
     summary,
     status,

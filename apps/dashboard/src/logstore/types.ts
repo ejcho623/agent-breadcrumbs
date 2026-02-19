@@ -5,6 +5,7 @@ export interface NormalizedEvent {
   serverTimestamp: string;
   eventTime: string;
   actor: string | null;
+  tool: string | null;
   userName: string | null;
   summary: string | null;
   status: string | null;
@@ -16,6 +17,7 @@ export interface EventQuery {
   from?: Date;
   to?: Date;
   actor?: string;
+  tool?: string;
   user?: string;
   search?: string;
   limit?: number;
@@ -25,6 +27,7 @@ export interface FacetQuery {
   from?: Date;
   to?: Date;
   actor?: string;
+  tool?: string;
   user?: string;
   search?: string;
 }
@@ -36,6 +39,7 @@ export interface FacetCount {
 
 export interface Facets {
   actors: FacetCount[];
+  tools: FacetCount[];
   users: FacetCount[];
 }
 
@@ -43,6 +47,7 @@ export interface TimeseriesQuery {
   from?: Date;
   to?: Date;
   actor?: string;
+  tool?: string;
   user?: string;
   search?: string;
   bucket: "hour" | "day";

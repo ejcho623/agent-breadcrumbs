@@ -59,6 +59,7 @@ export class PostgresLogStore implements LogStore {
     from?: Date;
     to?: Date;
     actor?: string;
+    tool?: string;
     user?: string;
     search?: string;
   }): Promise<NormalizedEvent[]> {
@@ -78,6 +79,11 @@ export class PostgresLogStore implements LogStore {
     if (query.actor) {
       params.push(query.actor);
       whereClauses.push(`COALESCE(log_record->>'model', log_record->>'agent_id', log_record->>'actor_id') = $${params.length}`);
+    }
+
+    if (query.tool) {
+      params.push(query.tool);
+      whereClauses.push(`log_record->>'tool' = $${params.length}`);
     }
 
     if (query.user) {

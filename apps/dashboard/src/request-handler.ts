@@ -62,6 +62,7 @@ function parseCommonQuery(searchParams: URLSearchParams): {
   from?: Date;
   to?: Date;
   actor?: string;
+  tool?: string;
   user?: string;
   search?: string;
 } {
@@ -69,6 +70,7 @@ function parseCommonQuery(searchParams: URLSearchParams): {
     from: parseOptionalDate(searchParams.get("from"), "from"),
     to: parseOptionalDate(searchParams.get("to"), "to"),
     actor: parseOptionalString(searchParams.get("actor")),
+    tool: parseOptionalString(searchParams.get("tool")),
     user: parseOptionalString(searchParams.get("user")),
     search: parseOptionalString(searchParams.get("search")),
   };

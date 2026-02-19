@@ -1,12 +1,20 @@
 {
-  "agent_id": {
+  "model": {
     "type": "string",
-    "description": "Agent identifier (for example: codex-gpt5)."
+    "description": "Model identifier (for example: codex-gpt5.3 or claude-sonnet-4.5)."
+  },
+  "tool": {
+    "type": "string",
+    "description": "Agent client/tool used (for example: Cursor, ChatGPT, or Claude Code)."
+  },
+  "project": {
+    "type": "string",
+    "description": "Project or initiative associated with this unit of work."
   },
   "timestamp": {
     "type": "string",
     "format": "date-time",
-    "description": "When the logged work happened (ISO 8601)."
+    "description": "When the logged work happened (ISO 8601). Make sure to include current time."
   },
   "event_type": {
     "type": "string",

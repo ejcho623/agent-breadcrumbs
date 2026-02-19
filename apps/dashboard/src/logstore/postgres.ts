@@ -77,7 +77,7 @@ export class PostgresLogStore implements LogStore {
 
     if (query.actor) {
       params.push(query.actor);
-      whereClauses.push(`COALESCE(log_record->>'agent_id', log_record->>'actor_id') = $${params.length}`);
+      whereClauses.push(`COALESCE(log_record->>'model', log_record->>'agent_id', log_record->>'actor_id') = $${params.length}`);
     }
 
     if (query.user) {

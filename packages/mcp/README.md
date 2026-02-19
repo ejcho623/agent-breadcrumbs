@@ -95,7 +95,7 @@ When `user_name` is configured, the server injects:
 ### Built-In Schema Profiles
 
 - `default_v1`
-- `agent_insights_v1`
+- `agent_insights_v1` (`model`, `tool`, `project`, `timestamp`, `event_type`, `status`, `work_summary`, `duration_ms`, `run_id`, `additional`)
 - `delivery_tracking_v1`
 - `audit_trail_v1`
 - `knowledge_capture_v1`

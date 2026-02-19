@@ -155,7 +155,7 @@ export function renderDashboardHtml(): string {
             <label>To
               <input type="datetime-local" name="to" />
             </label>
-            <label>Agent
+            <label>Model
               <select name="actor"><option value="">All</option></select>
             </label>
             <label>User
@@ -179,7 +179,7 @@ export function renderDashboardHtml(): string {
         </section>
 
         <section class="card status">
-          <h3>Agent Breakdown</h3>
+          <h3>Model Breakdown</h3>
           <div id="actorBreakdown" class="bar-list"></div>
         </section>
 
@@ -209,19 +209,8 @@ export function renderDashboardHtml(): string {
       const countBadge = document.getElementById("count");
       const timeseriesRoot = document.getElementById("timeseries");
       const actorBreakdownRoot = document.getElementById("actorBreakdown");
-      const BASE_HEADERS = ["Time (Server)", "Agent", "User", "Summary"];
+      const BASE_HEADERS = ["Time", "Project", "Tool", "Model", "Summary", "Payload"];
       const DAY_MS = 24 * 60 * 60 * 1000;
-      const EXCLUDED_DYNAMIC_KEYS = new Set([
-        "agent_id",
-        "actor_id",
-        "user_name",
-        "timestamp",
-        "status",
-        "work_summary",
-        "summary",
-        "additional",
-      ]);
-      const MAX_DYNAMIC_COLUMNS = 4;
 
       function paramsFromForm() {
         const formData = new FormData(filtersForm);
@@ -440,28 +429,26 @@ export function renderDashboardHtml(): string {
       }
 
       function renderEvents(items) {
-        const dynamicColumns = inferDynamicColumns(items);
-        renderEventsHeader(dynamicColumns);
+        renderEventsHeader();
 
         countBadge.textContent = String(items.length) + " events";
         if (items.length === 0) {
-          const colspan = BASE_HEADERS.length + dynamicColumns.length + 1;
+          const colspan = BASE_HEADERS.length;
           eventsTable.innerHTML = '<tr><td class="empty" colspan="' + colspan + '">No matching events</td></tr>';
           return;
         }
 
         eventsTable.innerHTML = items.map((item) => {
-          const dynamicCells = dynamicColumns.map((key) => {
-            const value = item.payload[key];
-            return '<td>' + escapeHtml(renderScalarValue(value)) + '</td>';
-          }).join("");
+          const project = readDisplayString(item.payload.project);
+          const tool = readDisplayString(item.payload.tool);
+          const model = readDisplayString(item.payload.model) || readDisplayString(item.actor);
 
           return '<tr>' +
             '<td class="time-cell">' + new Date(item.eventTime).toLocaleString() + '</td>' +
-            '<td>' + renderNamePill(item.actor, 'actor') + '</td>' +
-            '<td>' + renderNamePill(item.userName, 'user') + '</td>' +
+            '<td>' + renderNamePill(project, 'project') + '</td>' +
+            '<td>' + renderNamePill(tool, 'tool') + '</td>' +
+            '<td>' + renderNamePill(model, 'model') + '</td>' +
             '<td class="summary-cell">' + escapeHtml(item.summary || '-') + '</td>' +
-            dynamicCells +
             '<td><pre>' + escapeHtml(JSON.stringify(item.payload, null, 2)) + '</pre></td>' +
           '</tr>';
         }).join("");
@@ -495,43 +482,8 @@ export function renderDashboardHtml(): string {
         return Math.abs(hash);
       }
 
-      function inferDynamicColumns(items) {
-        const counts = new Map();
-
-        for (const item of items) {
-          const payload = item.payload || {};
-          for (const key of Object.keys(payload)) {
-            if (EXCLUDED_DYNAMIC_KEYS.has(key)) {
-              continue;
-            }
-
-            const value = payload[key];
-            if (!isDisplayScalar(value)) {
-              continue;
-            }
-
-            counts.set(key, (counts.get(key) || 0) + 1);
-          }
-        }
-
-        return Array.from(counts.entries())
-          .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-          .slice(0, MAX_DYNAMIC_COLUMNS)
-          .map((entry) => entry[0]);
-      }
-
-      function renderEventsHeader(dynamicColumns) {
-        const headers = BASE_HEADERS
-          .concat(dynamicColumns)
-          .concat(["Payload"]);
-        eventsHeadRow.innerHTML = headers.map((label) => '<th>' + escapeHtml(label) + '</th>').join("");
-      }
-
-      function isDisplayScalar(value) {
-        if (typeof value === "string") {
-          return value.trim() !== "";
-        }
-        return typeof value === "number" || typeof value === "boolean";
+      function renderEventsHeader() {
+        eventsHeadRow.innerHTML = BASE_HEADERS.map((label) => '<th>' + escapeHtml(label) + '</th>').join("");
       }
 
       function renderScalarValue(value) {
@@ -542,6 +494,17 @@ export function renderDashboardHtml(): string {
           return String(value);
         }
         return "-";
+      }
+
+      function readDisplayString(value) {
+        if (typeof value === "string") {
+          const trimmed = value.trim();
+          return trimmed === "" ? null : trimmed;
+        }
+        if (typeof value === "number" || typeof value === "boolean") {
+          return String(value);
+        }
+        return null;
       }
 
       function updateSelect(select, entries) {

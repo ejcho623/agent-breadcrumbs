@@ -332,6 +332,11 @@ test('schema_profile applies built-in profile schema validation', async () => {
       const logWork = tools.tools.find((tool) => tool.name === 'log_work');
       assert.ok(logWork);
       assert.match(logWork.description ?? '', /Schema source=profile \(agent_insights_v1\)/i);
+      const profileProperties = logWork.inputSchema?.properties?.log_record?.properties;
+      assert.equal(profileProperties?.model?.type, 'string');
+      assert.equal(profileProperties?.tool?.type, 'string');
+      assert.equal(profileProperties?.project?.type, 'string');
+      assert.equal(profileProperties?.agent_id, undefined);
 
       const invalid = await client.callTool({
         name: 'log_work',

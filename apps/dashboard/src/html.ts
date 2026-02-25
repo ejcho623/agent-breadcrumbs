@@ -37,9 +37,10 @@ export function renderDashboardHtml(): string {
       .filters { grid-column: 1 / -1; }
       .timeseries { grid-column: span 6; }
       .status { grid-column: span 6; }
+      .breakdown-card { grid-column: span 4; }
       .events { grid-column: 1 / -1; }
       @media (max-width: 900px) {
-        .timeseries, .status { grid-column: 1 / -1; }
+        .timeseries, .status, .breakdown-card { grid-column: 1 / -1; }
       }
       form { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
       @media (max-width: 900px) {
@@ -186,6 +187,21 @@ export function renderDashboardHtml(): string {
           <div id="actorBreakdown" class="bar-list"></div>
         </section>
 
+        <section class="card breakdown-card">
+          <h3>Project Breakdown</h3>
+          <div id="projectBreakdown" class="bar-list"></div>
+        </section>
+
+        <section class="card breakdown-card">
+          <h3>Tool Breakdown</h3>
+          <div id="toolBreakdown" class="bar-list"></div>
+        </section>
+
+        <section class="card breakdown-card">
+          <h3>Name Breakdown</h3>
+          <div id="userBreakdown" class="bar-list"></div>
+        </section>
+
         <section class="card events">
           <h3>Events</h3>
           <div id="count" class="pill">0 events</div>
@@ -213,6 +229,9 @@ export function renderDashboardHtml(): string {
       const countBadge = document.getElementById("count");
       const timeseriesRoot = document.getElementById("timeseries");
       const actorBreakdownRoot = document.getElementById("actorBreakdown");
+      const projectBreakdownRoot = document.getElementById("projectBreakdown");
+      const toolBreakdownRoot = document.getElementById("toolBreakdown");
+      const userBreakdownRoot = document.getElementById("userBreakdown");
       const BASE_HEADERS = ["Time", "Project", "Tool", "Model", "Name", "Summary", "Payload"];
       const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -258,6 +277,13 @@ export function renderDashboardHtml(): string {
             '<div>' + row.count + '</div>' +
           '</div>';
         }).join("");
+      }
+
+      function topRows(rows, limit) {
+        if (!Array.isArray(rows)) {
+          return [];
+        }
+        return rows.slice(0, limit);
       }
 
       function renderHeatmap(root, rows) {
@@ -548,7 +574,10 @@ export function renderDashboardHtml(): string {
 
         renderEvents(eventsData.items);
         renderHeatmap(timeseriesRoot, timeseriesData.items);
-        renderBars(actorBreakdownRoot, facetsData.actors, "value");
+        renderBars(actorBreakdownRoot, topRows(facetsData.actors, 8), "value");
+        renderBars(projectBreakdownRoot, topRows(facetsData.projects, 8), "value");
+        renderBars(toolBreakdownRoot, topRows(facetsData.tools, 8), "value");
+        renderBars(userBreakdownRoot, topRows(facetsData.users, 8), "value");
       }
 
       function escapeHtml(value) {

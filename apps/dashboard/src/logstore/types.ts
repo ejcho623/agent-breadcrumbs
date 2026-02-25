@@ -4,6 +4,7 @@ export interface NormalizedEvent {
   id: string;
   serverTimestamp: string;
   eventTime: string;
+  project: string | null;
   actor: string | null;
   tool: string | null;
   userName: string | null;
@@ -38,6 +39,7 @@ export interface FacetCount {
 }
 
 export interface Facets {
+  projects: FacetCount[];
   actors: FacetCount[];
   tools: FacetCount[];
   users: FacetCount[];

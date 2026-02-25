@@ -29,11 +29,15 @@ export function applyEventQuery(events: NormalizedEvent[], query: EventQuery): N
 }
 
 export function buildFacets(events: NormalizedEvent[]): Facets {
+  const projectCounts = new Map<string, number>();
   const actorCounts = new Map<string, number>();
   const toolCounts = new Map<string, number>();
   const userCounts = new Map<string, number>();
 
   for (const event of events) {
+    if (event.project) {
+      projectCounts.set(event.project, (projectCounts.get(event.project) ?? 0) + 1);
+    }
     if (event.actor) {
       actorCounts.set(event.actor, (actorCounts.get(event.actor) ?? 0) + 1);
     }
@@ -46,6 +50,7 @@ export function buildFacets(events: NormalizedEvent[]): Facets {
   }
 
   return {
+    projects: mapCounts(projectCounts),
     actors: mapCounts(actorCounts),
     tools: mapCounts(toolCounts),
     users: mapCounts(userCounts),

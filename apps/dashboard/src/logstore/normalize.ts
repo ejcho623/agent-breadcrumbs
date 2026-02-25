@@ -53,6 +53,7 @@ export function normalizeEnvelope(
   const payloadObject = payload as Record<string, unknown>;
 
   const eventTime = serverTimestamp;
+  const project = readString(payloadObject, "project");
   const actor =
     readString(payloadObject, "model") ?? readString(payloadObject, "agent_id") ?? readString(payloadObject, "actor_id");
   const tool = readString(payloadObject, "tool");
@@ -64,6 +65,7 @@ export function normalizeEnvelope(
     id: typeof row.log_id === "string" ? row.log_id : `${serverTimestamp}:${Math.random().toString(16).slice(2)}`,
     serverTimestamp,
     eventTime,
+    project,
     actor,
     tool,
     userName,

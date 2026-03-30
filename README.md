@@ -26,6 +26,10 @@ will guide clients to log with correct payloads.
 - MCP server package (published): `packages/mcp`
 - Dashboard app (repo-local, not published): `apps/dashboard`
 
+## Hosted deployment
+
+A hosted deployment is available on [Fronteir AI](https://fronteir.ai/mcp/ejcho623-agent-breadcrumbs).
+
 ## Quick Start (MCP)
 
 Install and run with defaults:
